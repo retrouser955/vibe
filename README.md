@@ -19,7 +19,7 @@ A Discord music bot and small dashboard API built with Discord.js, CommandKit, a
 - Node.js compatible with the project's dependencies
 - Yarn (the repository includes a Yarn v1 lockfile)
 - A Discord application and bot, with the bot invited to a server
-- FFmpeg available in the runtime environment for audio playback and audio filters
+- [discord-player's specific FFmpeg](https://github.com/Androz2091/discord-player/blob/ecd553667c3a13ad8a349e6f5725c9fdfa407965/apps/website/content/docs/installation/ffmpeg.mdx) available in the runtime environment for audio playback and audio filters
 
 The bot requests the `Guilds` and `GuildVoiceStates` intents. Grant it the permissions needed to use application commands, connect to and speak in voice channels, and send messages and embeds in text channels. Do not grant Administrator unless you have another reason to do so.
 
