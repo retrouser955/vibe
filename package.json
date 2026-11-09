@@ -11,19 +11,26 @@
     "start": "commandkit start"
   },
   "devDependencies": {
+    "@types/express": "^5.0.6",
     "@types/node": "^24.19.2",
     "ts-morph": "^28.0.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "@types/jsonwebtoken": "^9.0.10"
   },
   "dependencies": {
     "@remedia/node": "^0.1.0-dev.0",
     "bgutils-js": "^4.0.3",
     "commandkit": "^1.2.6",
     "discord-player": "^8.0.0-dev.0",
+    "discord-player-spotify": "^1.1.9",
     "discord-player-youtubei": "^3.1.0",
     "discord.js": "^14.28.1",
+    "express": "^5.3.0",
     "googlevideo": "^5.0.1",
+    "jsonwebtoken": "^9.0.3",
+    "ms": "^2.1.3",
     "simple-ytdl-core": "^1.2.2",
+    "socket.io": "^4.8.4",
     "yangonkit": "^1.0.0"
   }
 }

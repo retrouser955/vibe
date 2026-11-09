@@ -1,8 +1,12 @@
-import { DiscordPlayer, GuildQueue } from "discord-player";
+import { DiscordPlayer } from "discord-player";
 import client from "./app.js";
 import { YoutubeExtractor } from "discord-player-youtubei";
-import { Colors, Events } from "discord.js";
+import { Events } from "discord.js";
 import { Logger } from "commandkit";
+import { SpotifyExtractor } from "discord-player-spotify";
+import { GuildQueue } from "discord-player";
+import { io } from "@/server/server.ts";
+import { Colors } from "discord.js";
 import { QueueMetadata } from "./lib/types.ts";
 import { createMusicEmbed } from "./lib/embeds.ts";
 
@@ -28,6 +32,8 @@ player.events.on("playerStart", async (queueUntyped, track) => {
     queue.metadata.channel.send({
         embeds: [createMusicEmbed(track)]
     });
+
+    io.to(`guild:${queue.guildId}`).emit("playerStart", track.toJSON());
 })
 
 player.events.on("emptyQueue", (queue) => {
@@ -37,14 +43,18 @@ player.events.on("emptyQueue", (queue) => {
         embeds: [
             {
                 title: "Queue has finished!",
-                description: `The queue in ${guild ? guild.name : "the current guild"} has finished!. Disconnecting...`,
+                description: `The queue in ${guild ? `**${guild.name}**` : "the current guild"} has finished!. Disconnecting...`,
                 color: Colors.Blue
             }
         ]
     })
+
+    io.to(`guild:${queue.guildId}`).emit("emptyQueue");
+
     queue.destroy();
-})
+});
 
 client.on(Events.Raw, (payload) => player.receive(payload));
 
+player.extractors.register(SpotifyExtractor);
 player.extractors.register(YoutubeExtractor);
