@@ -1,5 +1,4 @@
-import { player } from "@/createPlayer.ts";
-
+// TODO: AudioFilter.define() these filters when discord-player updates
 export const FFMPEG_AUDIO_FILTERS = {
     "Surround": [
         "apulsator=hz=0.09"
