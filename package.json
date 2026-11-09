@@ -1,0 +1,29 @@
+{
+  "name": "commandkit-basic-ts",
+  "description": "A CommandKit project using TypeScript",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "commandkit dev",
+    "build": "commandkit build",
+    "start": "commandkit start"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "ts-morph": "^28.0.0",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@remedia/node": "^0.1.0-dev.0",
+    "bgutils-js": "^4.0.3",
+    "commandkit": "^1.2.6",
+    "discord-player": "^8.0.0-dev.0",
+    "discord-player-youtubei": "^3.1.0",
+    "discord.js": "^14.28.1",
+    "googlevideo": "^5.0.1",
+    "simple-ytdl-core": "^1.2.2",
+    "yangonkit": "^1.0.0"
+  }
+}
