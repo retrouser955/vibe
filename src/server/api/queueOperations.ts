@@ -4,7 +4,7 @@ import { authenticateJWT } from "./authenticateJWT.ts";
 import { player } from "@/createPlayer.ts";
 import { QueueMetadata } from "@/lib/types.ts";
 import { createMusicEmbed } from "@/lib/embeds.ts";
-import { EmbedBuilder } from "discord.js";
+import { Colors, EmbedBuilder } from "discord.js";
 
 api.post("/queue", authenticateJWT, async (req, res) => {
     const { user, guild } = res.locals.auth;
@@ -46,6 +46,36 @@ api.post("/queue", authenticateJWT, async (req, res) => {
     });
 });
 
+api.post("/queue/toggle-pause", authenticateJWT, async (_, res) => {
+    const { user, guild } = res.locals.auth;
+    const queue = player.getQueue<QueueMetadata>(guild);
+    if (!queue) return res.status(404).json({
+        message: "Could not find that guild"
+    });
+
+    const track = queue.currentTrack;
+
+    if (!track) return res.status(409).json({
+        message: "Invalid queue state"
+    });
+
+    const isPaused = queue.node.isPaused();
+    const playbackState = isPaused ? "resumed" : "paused";
+
+    isPaused ? queue.node.resume() : queue.node.pause();
+
+    const embed = createMusicEmbed(track, queue, `The current track was ${playbackState}.`);
+    embed.setDescription(`${embed.data.description}\n-# ${playbackState} by <@${user}> via 🌐`);
+
+    queue.metadata.channel.send({
+        embeds: [embed]
+    });
+
+    res.json({
+        playbackState
+    });
+});
+
 api.post("/queue/skip", authenticateJWT, async (_, res) => {
     const { user, guild } = res.locals.auth;
     const queue = player.getQueue<QueueMetadata>(guild);
@@ -59,7 +89,7 @@ api.post("/queue/skip", authenticateJWT, async (_, res) => {
         message: "Invalid queue state"
     });
 
-    queue.skip();
+    await queue.skip();
 
     const embed = createMusicEmbed(track, queue, "The current track was skipped.");
     embed.setDescription(`${embed.data.description}\n-# Skipped by <@${user}> via 🌐`);
@@ -80,12 +110,12 @@ api.post("/queue/stop", authenticateJWT, async (_, res) => {
 
     const channel = queue.metadata.channel;
 
-    await queue.node.destroySession();
-    await queue.destroy();
+    await player.deleteQueue(queue.guildId);
 
     const embed = new EmbedBuilder()
         .setTitle("Queue was stopped")
-        .setDescription(`The queue in the current guild was stopped.\n-# Stopped via 🌐 by <@${user}>`);
+        .setDescription(`The queue in the current guild was stopped.\n-# Stopped by <@${user}> via 🌐`)
+        .setColor(Colors.Blue);
 
     channel.send({
         embeds: [embed]

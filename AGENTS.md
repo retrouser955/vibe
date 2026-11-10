@@ -38,7 +38,7 @@ export default async function play({ interaction }: ChatInputCommandContext) {
 }
 ```
 
-Existing commands are `/play`, `/skip`, `/web`, `/queue`, and `/stop`. Music commands use `guardMusicCommand` for voice-channel and queue checks. `/web` issues an ephemeral dashboard URL; treat its JWT as a credential.
+Existing commands are `/play`, `/pause`, `/nowplaying`, `/skip`, `/web`, `/queue`, and `/stop`. Music commands use `guardMusicCommand` for voice-channel and queue checks. `/web` issues an ephemeral dashboard URL; treat its JWT as a credential.
 
 ## HTTP API
 
@@ -53,6 +53,7 @@ All API routes are mounted below `/api` and protected by `authenticateJWT` using
 | `GET /api/queue?offset=0` | Returns `{ size, tracks }` with at most 20 queued tracks; invalid offset is `400`, missing queue/current track is `404`. |
 | `POST /api/queue` | Adds a deserialized track to an existing queue. Invalid payloads and playlists are `400`; missing queue is `404`; success returns `{ position }`. |
 | `POST /api/queue/skip` | Skips the current track; missing queue is `404`, no current track is `409`, success is `204 No Content`. |
+| `POST /api/queue/toggle-pause` | Toggles playback pause/resume on the current track. Returns `{ playbackState }` (`"paused"` or `"resumed"`), `404` if the guild has no queue, and `409` if there is no current track. |
 | `POST /api/queue/stop` | Stops the queue; missing queue is `404`, success is `204 No Content`. |
 
 `src/server/server.ts` installs `express.json()`, so JSON request bodies are parsed. The queue-add route passes its body to Discord Player's `deserialize`; maintain compatibility with the expected serialized payload and validate untrusted input. API serialization formats should not be assumed to be live class instances.

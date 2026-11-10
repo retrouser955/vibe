@@ -22,6 +22,17 @@ export const player = new DiscordPlayer({
     }
 });
 
+// TODO: Removed this monkey-patch after discord-player releases a new version.
+DiscordPlayer.prototype.deleteQueue = async function (...args) {
+    const queue = this.getQueue(args[0]);
+    const session = queue?.node?.session;
+    try {
+        return await this.queues.delete(args[0]);
+    } finally {
+        session?.dispose();
+    }
+}
+
 player.initialize(process.env['USER_ID']!).then(() => {
     Logger.info("Player has loaded");
 });
@@ -42,7 +53,7 @@ const emitAudioTrackUpdate = (eventName: string, queue: GuildQueue, track: Track
             eventName,
             Array.isArray(track) ? track.map(v => serialize(v)) : serialize(track)
         );
-} 
+}
 
 (["audioTrackAdd", "audioTrackRemove", "audioTracksRemove", "audioTracksAdd"] as (keyof GuildQueueEventsMap)[]).forEach(v => {
     player.events.on(v, (...args: [GuildQueue, Track | Track[]]) => emitAudioTrackUpdate(v, ...args))
@@ -61,9 +72,7 @@ player.events.on("emptyQueue", async (queue) => {
         ]
     })
 
-    Logger.log('Queued finished. Destoryed session!');
-    await queue.node.destroySession();
-    await queue.destroy();
+    await player.deleteQueue(queue.guildId);
 
     io.to(`guild:${queue.guildId}`).emit("emptyQueue");
 });

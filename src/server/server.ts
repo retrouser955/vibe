@@ -2,6 +2,7 @@ import { createWebURL } from "@/lib/web.ts";
 import { decodeJWT } from "@/web/createSecureToken.ts";
 import express from "express";
 import { createServer } from "node:http";
+import { join } from "node:path";
 import { io } from "./socket.ts";
 import { api } from "./api/index.ts";
 import { Logger } from "commandkit";
@@ -28,6 +29,12 @@ export function startServer() {
     const app = express();
     app.use(express.json());
     app.use("/api", api);
+
+    // Serve the plain HTML dashboard after the API. The /web command links to
+    // /dashboard?session=<jwt>, so both mounts are needed for the app and assets.
+    const publicDir = join(process.cwd(), "public");
+    app.use(express.static(publicDir));
+    app.use("/dashboard", express.static(publicDir));
 
     httpServer = createServer(app);
     io.attach(httpServer);

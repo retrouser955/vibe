@@ -5,6 +5,8 @@ Vibe is a Discord music bot with an Express API and Socket.IO backend. The backe
 ## Features
 
 - `/play <query>` searches and plays the first matching track in the caller's voice channel.
+- `/pause` pauses the currently playing track.
+- `/nowplaying` displays the current track and its progress.
 - `/skip` skips the current track.
 - YouTube and Spotify search/playback extractors are registered with Discord Player.
 - Authenticated API endpoints expose user, guild, search, and queue operations.
@@ -67,6 +69,14 @@ The example values (`BASE_URL=http://localhost`, `PORT=3000`) produce `http://lo
 
 Requires the user to be in a joinable voice channel and the bot to be able to send messages in the command channel. The bot rejects requests if it is already connected to a different voice channel in the guild.
 
+### `/pause`
+
+Pauses the currently playing track. Requires an existing queue and the user to share the bot's voice channel. If the queue is already paused, the command replies ephemerally.
+
+### `/nowplaying`
+
+Shows the currently playing track with its progress bar. Requires an existing queue and the user to share the bot's voice channel. If no track is playing, the command replies ephemerally.
+
 ### `/skip`
 
 Requires an existing queue and the user to share the bot's voice channel. It skips the current track; if no track is playing, the command replies ephemerally.
@@ -102,6 +112,7 @@ Missing, invalid, or expired tokens receive `401 Unauthorized`. The JWT is gener
 | `GET /api/queue?offset=0` | Returns `{ size, tracks }`, with up to 20 queued tracks starting at the requested offset. Invalid offsets return `400`; a missing queue/current track returns `404`. |
 | `POST /api/queue` | Adds a serialized track to an existing guild queue. The JSON body must be compatible with the server's `deserialize` call. Returns `{ position }`; invalid payloads or playlists return `400`, and a missing queue returns `404`. |
 | `POST /api/queue/skip` | Skips the current track. Returns `204 No Content` on success, `404` if the guild has no queue, and `409` if the queue has no current track. |
+| `POST /api/queue/toggle-pause` | Toggles playback pause/resume on the current track. Returns `{ playbackState }` (`"paused"` or `"resumed"`), `404` if the guild has no queue, and `409` if there is no current track. |
 | `POST /api/queue/stop` | Stops and destroys the guild queue. Returns `204 No Content` on success, `404` if the guild has no queue. |
 
 Track responses use serialization provided by the libraries in the route handlers. Clients should follow the actual serialized payload shape rather than treating responses as live Discord Player class instances.
