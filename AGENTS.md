@@ -1,6 +1,6 @@
 # Agent guide
 
-Use this document as a source of verified project conventions when changing this repository. The project is a Discord music bot and dashboard backend using Discord.js, CommandKit, YangonKit, Express, Socket.IO, and `discord-player` v8. The dashboard frontend is not part of this repository.
+Use this document as a source of verified project conventions when changing this repository. The project is a Discord music bot and dashboard using Discord.js, CommandKit, YangonKit, Express, Socket.IO, `discord-player` v8, React, TypeScript, and Vite. The dashboard frontend is a separate package under `dashboard/`.
 
 ## Architecture
 
@@ -13,6 +13,14 @@ Use this document as a source of verified project conventions when changing this
 - `src/lib/` contains shared queue metadata/types, command guards, embeds, filter presets, and URL utilities.
 
 Keep module dependencies directed to avoid cycles: player code may import the standalone Socket.IO instance, but should not import `server.ts`, which imports the API routes; API route handlers may import the shared player.
+
+## Dashboard frontend
+
+- `dashboard/` is a React + TypeScript + Vite application. Keep frontend-only code and dependencies in this package; do not add frontend files under the backend's `src/` tree.
+- Run the backend from the repository root with `yarn dev` and the frontend separately from `dashboard/` with `yarn dev`.
+- `dashboard/vite.config.ts` proxies `/api` and `/socket.io` to `BACKEND_URL`, defaulting to `http://localhost:3000`. Keep frontend requests on relative `/api` URLs and connect Socket.IO to the current origin so Vite's proxy is used in development. The Socket.IO proxy needs WebSocket support enabled.
+- `/web` currently links to the Express origin. Express does not yet serve the dashboard build or provide an SPA fallback, so use the Vite URL during frontend development and do not assume production static hosting is implemented.
+- `dashboard/src/lib/grab-token.ts` reads the `session` query parameter, removes it from the visible URL, and saves the JWT in `localStorage` as `dashboardToken`. Reuse this key when reading the stored token; treat the value as a credential, never log it, and do not commit it. Since browser JavaScript can access `localStorage`, avoid adding unnecessary persistence or exposure.
 
 ## Slash commands
 
@@ -34,7 +42,7 @@ export default async function play({ interaction }: ChatInputCommandContext) {
 }
 ```
 
-Existing commands are `/play`, `/skip`, and `/web`. Music commands use `guardMusicCommand` for voice-channel and queue checks. `/web` issues an ephemeral dashboard URL; treat its JWT as a credential.
+Existing commands are `/play`, `/skip`, `/web`, `/queue`, and `/stop`. Music commands use `guardMusicCommand` for voice-channel and queue checks. `/web` issues an ephemeral dashboard URL; treat its JWT as a credential.
 
 ## HTTP API
 
@@ -49,12 +57,42 @@ All API routes are mounted below `/api` and protected by `authenticateJWT` using
 | `GET /api/queue?offset=0` | Returns `{ size, tracks }` with at most 20 queued tracks; invalid offset is `400`, missing queue/current track is `404`. |
 | `POST /api/queue` | Adds a deserialized track to an existing queue. Invalid payloads and playlists are `400`; missing queue is `404`; success returns `{ position }`. |
 | `POST /api/queue/skip` | Skips the current track; missing queue is `404`, no current track is `409`, success is `204 No Content`. |
+| `POST /api/queue/stop` | Stops the queue; missing queue is `404`, success is `204 No Content`. |
 
 `src/server/server.ts` installs `express.json()`, so JSON request bodies are parsed. The queue-add route passes its body to Discord Player's `deserialize`; maintain compatibility with the expected serialized payload and validate untrusted input. API serialization formats should not be assumed to be live class instances.
 
 ## Socket.IO
 
-Clients authenticate with the dashboard token in `auth.token`; successful connections join `guild:<guild-id>`. Current player events include `playerStart`, `emptyQueue`, `playerPause`, and `playerResume`. Start events carry the track JSON, empty-queue events carry no payload, and pause/resume events carry the player timestamp/progress.
+Clients authenticate with the dashboard token in `auth.token`; successful connections join `guild:<guild-id>`. Current player events include `playerStart`, `audioTrackAdd`, `audioTracksAdd`, `audioTrackRemove`, `audioTracksRemove`, `emptyQueue`, `playerPause`, and `playerResume`. Start events carry the track serialized payload, empty-queue events carry no payload, and pause/resume events carry the player timestamp/progress.
+
+Serialized track payloads have this shape:
+
+```json
+{
+  "type": "track",
+  "version": 1,
+  "data": {
+    "sourceReference": {
+      "pluginId": "...",
+      "data": "..."
+    },
+    "id": "...",
+    "title": "...",
+    "author": "...",
+    "description": "...",
+    "url": "...",
+    "thumbnail": "...",
+    "durationMS": 180000,
+    "views": 1000,
+    "requestedBy": "...",
+    "source": "...",
+    "live": false,
+    "metadata": null
+  }
+}
+```
+
+`sourceReference` is omitted when the track was not resolved by a source plugin. `requestedBy` is the requester's user ID or `null`. `metadata` is JSON-safe application metadata or `null`.
 
 Use the same token for HTTP and Socket.IO. Do not log or expose dashboard URLs or JWT secrets. The server does not currently define an explicit Socket.IO CORS policy; deployment-facing changes should use a deliberately restricted trusted origin rather than a permissive wildcard.
 
@@ -78,5 +116,8 @@ Useful scripts from `package.json`:
 - `yarn dev` — start CommandKit development mode.
 - `yarn build` — type-check and create the production build.
 - `yarn start` — start the production build.
+- From `dashboard/`, `yarn dev` starts Vite and `yarn build` type-checks and builds the frontend into `dashboard/dist`.
 
-There is currently no automated test script. Run `yarn build` after code changes. No dashboard frontend or filter-control API is currently implemented.
+The Vite proxy's `BACKEND_URL` is a dashboard development setting, not a required backend environment variable. Build the backend and dashboard separately. The Express static middleware and SPA fallback for production hosting have not yet been added.
+
+There is currently no automated test script. Run the root `yarn build` after backend changes and `yarn build` from `dashboard/` after frontend changes. The filter presets are not currently exposed through a filter-control API.

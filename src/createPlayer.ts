@@ -1,4 +1,4 @@
-import { DiscordPlayer } from "discord-player";
+import { DiscordPlayer, GuildQueueEvents, GuildQueueEventsMap, serialize, Track } from "discord-player";
 import client from "./app.js";
 import { YoutubeExtractor } from "discord-player-youtubei";
 import { Events } from "discord.js";
@@ -33,10 +33,22 @@ player.events.on("playerStart", async (queueUntyped, track) => {
         embeds: [createMusicEmbed(track)]
     });
 
-    io.to(`guild:${queue.guildId}`).emit("playerStart", track.toJSON());
+    io.to(`guild:${queue.guildId}`).emit("playerStart", serialize(track));
 });
 
-player.events.on("emptyQueue", (queue) => {
+const emitAudioTrackUpdate = (eventName: string, queue: GuildQueue, track: Track | Track[]) => {
+    io.to(`guild:${queue.guildId}`)
+        .emit(
+            eventName,
+            Array.isArray(track) ? track.map(v => serialize(v)) : serialize(track)
+        );
+} 
+
+(["audioTrackAdd", "audioTrackRemove", "audioTracksRemove", "audioTracksAdd"] as (keyof GuildQueueEventsMap)[]).forEach(v => {
+    player.events.on(v, (...args: [GuildQueue, Track | Track[]]) => emitAudioTrackUpdate(v, ...args))
+});
+
+player.events.on("emptyQueue", async (queue) => {
     const guild = client.guilds.cache.get(queue.guildId);
 
     (queue.metadata as QueueMetadata).channel.send({
@@ -49,9 +61,11 @@ player.events.on("emptyQueue", (queue) => {
         ]
     })
 
-    io.to(`guild:${queue.guildId}`).emit("emptyQueue");
+    Logger.log('Queued finished. Destoryed session!');
+    await queue.node.destroySession();
+    await queue.destroy();
 
-    queue.destroy();
+    io.to(`guild:${queue.guildId}`).emit("emptyQueue");
 });
 
 

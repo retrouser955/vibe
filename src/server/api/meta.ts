@@ -2,13 +2,14 @@ import { api } from "./router.ts";
 import { authenticateJWT } from "./authenticateJWT.ts";
 import client from "@/app.ts";
 import { player } from "@/createPlayer.ts";
-import { serialize } from "v8";
+import { serialize } from "discord-player";
 
 api.get("/me", authenticateJWT, async (_req, res) => {
     const claims = res.locals.auth;
     const user = await client.users.fetch(claims.user);
+    const userJson = user.toJSON() as Record<string, unknown>;
     res.json({
-        ...(user),
+        ...(userJson),
         userAvatarURL: user.displayAvatarURL()
     });
 });
@@ -16,8 +17,9 @@ api.get("/me", authenticateJWT, async (_req, res) => {
 api.get("/guild", authenticateJWT, async (_req, res) => {
     const claims = res.locals.auth;
     const guild = await client.guilds.fetch(claims.guild);
+    const guildJson = guild.toJSON() as Record<string, unknown>;
     res.json({
-        ...guild,
+        ...guildJson,
         guildIconURL: guild.iconURL()
     });
 });
@@ -35,8 +37,8 @@ api.get("/search", authenticateJWT, async (req, res) => {
             requestedBy: claims.user as string
         });
 
-        return res.json(results.tracks.slice(0, 5).map(serialize));
-    } catch {
+        return res.json(results.tracks.slice(0, 5).map((value) => serialize(value)));
+    } catch (error) {
         return res.json([]);
     }
 });

@@ -4,6 +4,7 @@ import { authenticateJWT } from "./authenticateJWT.ts";
 import { player } from "@/createPlayer.ts";
 import { QueueMetadata } from "@/lib/types.ts";
 import { createMusicEmbed } from "@/lib/embeds.ts";
+import { EmbedBuilder } from "discord.js";
 
 api.post("/queue", authenticateJWT, async (req, res) => {
     const { user, guild } = res.locals.auth;
@@ -33,7 +34,7 @@ api.post("/queue", authenticateJWT, async (req, res) => {
 
     queue.play(deserializedTrack);
 
-    const embed = createMusicEmbed(track, queue);
+    const embed = createMusicEmbed(deserializedTrack, queue);
     embed.setDescription(`${embed.data.description}\n-# Queued by <@${user}> via 🌐`);
 
     queue.metadata.channel.send({
@@ -45,7 +46,7 @@ api.post("/queue", authenticateJWT, async (req, res) => {
     });
 });
 
-api.post("/queue/skip", authenticateJWT, async (req, res) => {
+api.post("/queue/skip", authenticateJWT, async (_, res) => {
     const { user, guild } = res.locals.auth;
     const queue = player.getQueue<QueueMetadata>(guild);
     if (!queue) return res.status(404).json({
@@ -54,7 +55,7 @@ api.post("/queue/skip", authenticateJWT, async (req, res) => {
 
     const track = queue.currentTrack;
 
-    if(!track) return res.status(409).json({
+    if (!track) return res.status(409).json({
         message: "Invalid queue state"
     });
 
@@ -69,3 +70,26 @@ api.post("/queue/skip", authenticateJWT, async (req, res) => {
 
     res.sendStatus(204);
 });
+
+api.post("/queue/stop", authenticateJWT, async (_, res) => {
+    const { user, guild } = res.locals.auth;
+    const queue = player.getQueue<QueueMetadata>(guild);
+    if (!queue) return res.status(404).json({
+        message: "Could not find that guild"
+    });
+
+    const channel = queue.metadata.channel;
+
+    await queue.node.destroySession();
+    await queue.destroy();
+
+    const embed = new EmbedBuilder()
+        .setTitle("Queue was stopped")
+        .setDescription(`The queue in the current guild was stopped.\n-# Stopped via 🌐 by <@${user}>`);
+
+    channel.send({
+        embeds: [embed]
+    });
+
+    res.sendStatus(204);
+})
