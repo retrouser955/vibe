@@ -1,16 +1,14 @@
 # Vibe
 
-Vibe is a Discord music bot with an Express API and Socket.IO backend, plus a React dashboard built with Vite. The backend uses Discord.js, CommandKit, YangonKit, and `discord-player` v8.
+Vibe is a Discord music bot with an Express API and Socket.IO backend. The backend uses Discord.js, CommandKit, YangonKit, and `discord-player` v8.
 
 ## Features
 
 - `/play <query>` searches and plays the first matching track in the caller's voice channel.
 - `/skip` skips the current track.
-- `/web` creates a private, three-hour dashboard session link scoped to the current user and guild.
-- The dashboard frontend lives in `dashboard/` and uses React, TypeScript, Vite, and `socket.io-client`.
 - YouTube and Spotify search/playback extractors are registered with Discord Player.
 - Authenticated API endpoints expose user, guild, search, and queue operations.
-- Socket.IO connections are authenticated with the dashboard JWT and receive guild-scoped player events.
+- Socket.IO connections authenticate with a JWT and receive guild-scoped player events.
 
 ## Requirements
 
@@ -22,13 +20,10 @@ The bot requests the `Guilds` and `GuildVoiceStates` intents. Grant only the per
 
 ## Setup
 
-Install backend and dashboard dependencies separately:
+Install dependencies:
 
 ```sh
 yarn install
-cd dashboard
-yarn install
-cd ..
 ```
 
 Copy `.env.example` to `.env` and set the values described below. Generate a strong secret for `DASHBOARD_TOKEN`, for example:
@@ -39,26 +34,19 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
 ## Development
 
-Run the backend and frontend in separate terminals. From the repository root, start the bot and Express API:
+Start the bot and Express API:
 
 ```sh
 yarn dev
 ```
 
-In another terminal, start Vite:
+For production builds, run:
 
 ```sh
-cd dashboard
-yarn dev
+yarn build
 ```
 
-Open the Vite URL printed in the terminal (normally `http://localhost:5173`). The Vite config proxies `/api` and `/socket.io` to `http://localhost:3000` by default. Set `BACKEND_URL` in the dashboard environment if the Express server uses a different URL. Frontend requests should use relative `/api` paths, and Socket.IO should connect to the current origin so both use this proxy.
-
-The `/web` command currently builds a link to the Express origin. Express currently mounts the API but does not yet serve the Vite build, so that link does not open the dashboard during development. Open the Vite URL instead when working on the frontend. The frontend reads the `session` query parameter, removes it from the address bar, and stores the JWT in `localStorage` under `dashboardToken`.
-
-For builds, run `yarn build` at the repository root for the backend and `yarn build` in `dashboard/` for the frontend. The frontend build is written to `dashboard/dist`. The Express static-file hosting and SPA fallback still need to be wired up before the dashboard is served by Express in production.
-
-Keep `.env`, bot credentials, JWT secrets, and generated dashboard links private. The dashboard link contains a bearer token and can be used by anyone who obtains it until it expires.
+Keep `.env`, bot credentials, JWT secrets, and generated links private. The link contains a bearer token and can be used by anyone who obtains it until it expires.
 
 ## Environment variables
 
@@ -120,7 +108,7 @@ Track responses use serialization provided by the libraries in the route handler
 
 ## Socket.IO
 
-Socket.IO shares the Express HTTP server. Pass the dashboard JWT in the connection handshake:
+Socket.IO shares the Express HTTP server. Pass the JWT in the connection handshake:
 
 ```js
 const socket = io(serverUrl, {
@@ -169,7 +157,7 @@ Serialized track payloads have this shape:
 
 `sourceReference` is omitted when the track was not resolved by a source plugin. `requestedBy` is the requester's user ID or `null`. `metadata` is JSON-safe application metadata or `null`.
 
-Use the same JWT for API requests and Socket.IO authentication. Avoid logging or exposing it. During development, Vite proxies both API and Socket.IO traffic to Express. In production, the intended setup is to serve the frontend and API from the same origin; use HTTPS/WSS.
+Use the same JWT for API requests and Socket.IO authentication. Avoid logging or exposing it. In production, the intended setup is to serve the frontend and API from the same origin; use HTTPS/WSS.
 
 ## Project structure
 
@@ -183,16 +171,13 @@ src/
 	server/server.ts               Express and Socket.IO server startup
 	server/socket.ts               Shared Socket.IO instance
 	server/api/                    API router, authentication, and route handlers
-	web/createSecureToken.ts       Dashboard JWT generation and verification
+	web/createSecureToken.ts       JWT generation and verification
 ```
 
 `commandkit.config.ts` enables YangonKit macros for slash command declarations. TypeScript's `@/*` alias maps to `src/*`.
 
 ## Development notes
 
-- API route files register handlers as side effects; `src/server/api/index.ts` imports them and exports the shared router.
-- `src/server/socket.ts` owns the shared Socket.IO instance to keep it separate from server startup and API route imports.
-- `src/server/server.ts` enables JSON request parsing, attaches Socket.IO, mounts the API, and starts listening.
-- The React/Vite frontend is a separate package under `dashboard/`; its dev server proxies API and Socket.IO traffic to Express. Production static hosting is not yet configured in Express.
+src/server/server.ts enables JSON request parsing, attaches Socket.IO, mounts the API, and starts listening.
 - `src/lib/filters.ts` contains filter presets, but they are not currently exposed through commands or API routes.
-- There is no test script in the root `package.json`; the root `yarn build` runs the CommandKit build and type checking. The dashboard has its own build script, which type-checks and builds with Vite.
+- There is no test script in the root `package.json`; the root `yarn build` runs the CommandKit build and type checking.

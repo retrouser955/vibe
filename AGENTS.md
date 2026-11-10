@@ -16,11 +16,7 @@ Keep module dependencies directed to avoid cycles: player code may import the st
 
 ## Dashboard frontend
 
-- `dashboard/` is a React + TypeScript + Vite application. Keep frontend-only code and dependencies in this package; do not add frontend files under the backend's `src/` tree.
-- Run the backend from the repository root with `yarn dev` and the frontend separately from `dashboard/` with `yarn dev`.
-- `dashboard/vite.config.ts` proxies `/api` and `/socket.io` to `BACKEND_URL`, defaulting to `http://localhost:3000`. Keep frontend requests on relative `/api` URLs and connect Socket.IO to the current origin so Vite's proxy is used in development. The Socket.IO proxy needs WebSocket support enabled.
-- `/web` currently links to the Express origin. Express does not yet serve the dashboard build or provide an SPA fallback, so use the Vite URL during frontend development and do not assume production static hosting is implemented.
-- `dashboard/src/lib/grab-token.ts` reads the `session` query parameter, removes it from the visible URL, and saves the JWT in `localStorage` as `dashboardToken`. Reuse this key when reading the stored token; treat the value as a credential, never log it, and do not commit it. Since browser JavaScript can access `localStorage`, avoid adding unnecessary persistence or exposure.
+- No Dashboard currently exists
 
 ## Slash commands
 
