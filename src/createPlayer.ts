@@ -5,7 +5,7 @@ import { Events } from "discord.js";
 import { Logger } from "commandkit";
 import { SpotifyExtractor } from "discord-player-spotify";
 import { GuildQueue } from "discord-player";
-import { io } from "@/server/server.ts";
+import { io } from "@/server/socket.ts";
 import { Colors } from "discord.js";
 import { QueueMetadata } from "./lib/types.ts";
 import { createMusicEmbed } from "./lib/embeds.ts";
@@ -34,7 +34,7 @@ player.events.on("playerStart", async (queueUntyped, track) => {
     });
 
     io.to(`guild:${queue.guildId}`).emit("playerStart", track.toJSON());
-})
+});
 
 player.events.on("emptyQueue", (queue) => {
     const guild = client.guilds.cache.get(queue.guildId);
@@ -53,6 +53,15 @@ player.events.on("emptyQueue", (queue) => {
 
     queue.destroy();
 });
+
+
+function updateProgress(queue: GuildQueue, eventName: string) {
+    const progress = queue.node.getTimestamp()!;
+    io.to(`guild:${queue.guildId}`).emit(eventName, progress);
+}
+
+player.events.on("playerPause", (queue) => updateProgress(queue, "playerPause"));
+player.events.on("playerResume", (queue) => updateProgress(queue, "playerResume"));
 
 client.on(Events.Raw, (payload) => player.receive(payload));
 

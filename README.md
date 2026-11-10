@@ -1,146 +1,131 @@
 # Vibe
 
-A Discord music bot and small dashboard API built with Discord.js, CommandKit, and `discord-player` v8.
+Vibe is a Discord music bot with an Express API and Socket.IO backend for a dashboard. It uses Discord.js, CommandKit, YangonKit, and `discord-player` v8.
+
+The repository contains the backend only; it does not include the dashboard frontend.
 
 ## Features
 
-- `/play <query>` searches for a track and starts playback in your current voice channel. The first search result is played.
-- `/skip` skips the currently playing track.
-- `/web` creates a private dashboard URL for the current guild. The link contains a signed session token and should be treated like a password.
-- YouTube and Spotify extractors are registered with Discord Player.
-- Express API handlers are defined for user, guild, search, current-track, and queue data, with JWT authentication (see the route-registration note below).
-- Socket.IO authenticates dashboard connections with the JWT and groups connections by guild. The player emits `playerStart` and `emptyQueue` updates.
-- Several FFmpeg audio filter presets are defined in `src/lib/filters.ts`; they are not currently exposed as bot commands or API routes.
-
-> This repository contains the bot and dashboard backend only. It does not include dashboard frontend assets or a frontend application.
+- `/play <query>` searches and plays the first matching track in the caller's voice channel.
+- `/skip` skips the current track.
+- `/web` creates a private, three-hour dashboard session link scoped to the current user and guild.
+- YouTube and Spotify search/playback extractors are registered with Discord Player.
+- Authenticated API endpoints expose user, guild, search, and queue operations.
+- Socket.IO connections are authenticated with the dashboard JWT and receive guild-scoped player events.
 
 ## Requirements
 
-- Node.js compatible with the project's dependencies
-- Yarn (the repository includes a Yarn v1 lockfile)
-- A Discord application and bot, with the bot invited to a server
-- [discord-player's specific FFmpeg](https://github.com/Androz2091/discord-player/blob/ecd553667c3a13ad8a349e6f5725c9fdfa407965/apps/website/content/docs/installation/ffmpeg.mdx) available in the runtime environment for audio playback and audio filters
+- Node.js compatible with the installed dependencies and Yarn.
+- A Discord application and bot invited to a server.
+- The audio dependencies/runtime required by Discord Player, including its supported FFmpeg setup.
 
-The bot requests the `Guilds` and `GuildVoiceStates` intents. Grant it the permissions needed to use application commands, connect to and speak in voice channels, and send messages and embeds in text channels. Do not grant Administrator unless you have another reason to do so.
+The bot requests the `Guilds` and `GuildVoiceStates` intents. Grant only the permissions it needs: application command use, voice connect/speak, and sending messages and embeds. Administrator permission is not required.
 
 ## Setup
 
-1. Install dependencies:
+1. Install dependencies with `yarn install`.
+2. Copy `.env.example` to `.env` and set the values described below.
+3. Generate a strong secret for `DASHBOARD_TOKEN`, for example:
 
-	```sh
-	yarn install
-	```
+	 ```sh
+	 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+	 ```
 
-2. Copy `.env.example` to `.env` and fill in the values below.
+4. Run the development app with `yarn dev`.
+5. For production, run `yarn build` and then `yarn start`.
 
-3. Generate a strong JWT signing secret and place it in `DASHBOARD_TOKEN`. For example:
-
-	```sh
-	node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-	```
-
-4. Start the bot in development:
-
-	```sh
-	yarn dev
-	```
-
-5. To build and run the production version:
-
-	```sh
-	yarn build
-	yarn start
-	```
-
-Keep `.env` and generated dashboard links private. Never commit real bot tokens or JWT signing secrets.
+Keep `.env`, bot credentials, JWT secrets, and generated dashboard links private. The dashboard link contains a bearer token and can be used by anyone who obtains it until it expires.
 
 ## Environment variables
 
 | Variable | Required | Description |
 | --- | --- | --- |
 | `TOKEN` | Yes | Discord bot token used by CommandKit/Discord.js. |
-| `USER_ID` | Yes | Discord bot user ID; passed to Discord Player during initialization. |
-| `PORT` | Yes | Port for the Express and Socket.IO HTTP server. |
-| `BASE_URL` | Yes | Public site/server origin. In development the app appends `:<PORT>`; in production this value is used as-is. |
-| `NODE_ENV` | Yes | Set to `development` locally. In production, set to a production value such as `production`. |
-| `DASHBOARD_TOKEN` | Yes | Secret used to sign and verify dashboard JWTs. Use a long, random value and keep it consistent across instances. |
+| `USER_ID` | Yes | Discord bot user ID, passed to Discord Player initialization. |
+| `PORT` | Yes | Port used by the Express and Socket.IO HTTP server. |
+| `BASE_URL` | Yes | Public origin. In development, `:<PORT>` is appended; otherwise this value is used as-is. |
+| `NODE_ENV` | Yes | Use `development` locally; use a production value in deployment. |
+| `DASHBOARD_TOKEN` | Yes | Secret used to sign and verify dashboard JWTs. Use a long random value. |
 
-The example `.env.example` uses `http://localhost` as `BASE_URL` and `3000` as `PORT`, yielding `http://localhost:3000` in development. In production, provide the full externally reachable URL, including `https://` and any required port. Configure your reverse proxy/firewall to forward the HTTP and WebSocket traffic to `PORT`.
+The example values (`BASE_URL=http://localhost`, `PORT=3000`) produce `http://localhost:3000` in development. In production, set `BASE_URL` to the externally reachable origin, normally using HTTPS, and proxy HTTP and WebSocket traffic to `PORT`.
 
 ## Discord commands
 
 ### `/play <query>`
 
-The user must be in a joinable voice channel, and the bot must be able to send messages in the command's text channel. The bot searches via Discord Player, plays the first result, and posts track details. If the bot is already connected to a different voice channel in that guild, the command is rejected.
+Requires the user to be in a joinable voice channel and the bot to be able to send messages in the command channel. The bot rejects requests if it is already connected to a different voice channel in the guild.
 
 ### `/skip`
 
-Skips the current track in the guild's queue. It requires an existing queue and the bot to be in the same voice channel as the user.
+Requires an existing queue and the user to share the bot's voice channel. It skips the current track; if no track is playing, the command replies ephemerally.
 
 ### `/web`
 
-Creates an ephemeral dashboard link scoped to the current user and guild. The JWT currently expires after three hours. Anyone with the link can use its bearer token until it expires, so do not share or publish it.
+Creates an ephemeral link containing a JWT with the user's and guild's IDs. The token expires after three hours. Treat the full link as a secret.
 
 ## HTTP API
 
-The API router is mounted under `/api`. Endpoint handlers are defined for the routes below and require this header:
+All endpoints are mounted under `/api` and require:
 
 ```http
 Authorization: Bearer <dashboard-jwt>
 ```
 
-The JWT is generated by `/web`; it contains the user and guild IDs. Invalid or missing tokens receive `401 Unauthorized` on registered protected routes.
-
-**Current implementation note:** `src/server/server.ts` mounts the shared router, but does not import the modules that register the `/me`, `/guild`, `/search`, `/current`, and `/queue` handlers (`src/server/api/meta.ts` and `src/server/api/queueStatus.ts`). As currently wired, those endpoints may return `404` until those route modules are imported during server startup.
+Missing, invalid, or expired tokens receive `401 Unauthorized`. The JWT is generated by `/web` and scopes requests to its user and guild claims.
 
 | Method and path | Description |
 | --- | --- |
-| `GET /api/me` | Handler fetches the Discord user represented by the token and includes `userAvatarURL`. |
-| `GET /api/guild` | Handler fetches the token's guild and includes `guildIconURL`. |
-| `GET /api/search?query=<text>` | Handler searches for tracks on behalf of the token's user and returns up to five results. A missing or invalid query receives `400`. Search errors currently return an empty array. |
-| `GET /api/current` | Handler returns the current track for the token's guild, or `404` if no current track exists. |
-| `GET /api/queue?offset=0` | Handler returns the queue size and a page of up to 20 queued tracks starting at `offset`. |
+| `GET /api/me` | Fetches the token's Discord user and adds `userAvatarURL`. |
+| `GET /api/guild` | Fetches the token's guild and adds `guildIconURL`. |
+| `GET /api/search?query=<text>` | Searches on behalf of the token's user and returns up to five serialized results. A missing or non-string query returns `400`; search errors return an empty array. |
+| `GET /api/queue/current` | Returns the current track, or `404` if there is no current track/queue. |
+| `GET /api/queue?offset=0` | Returns `{ size, tracks }`, with up to 20 queued tracks starting at the requested offset. Invalid offsets return `400`; a missing queue/current track returns `404`. |
+| `POST /api/queue` | Adds a serialized track to an existing guild queue. The JSON body must be compatible with the server's `deserialize` call. Returns `{ position }`; invalid payloads or playlists return `400`, and a missing queue returns `404`. |
+| `POST /api/queue/skip` | Skips the current track. Returns `204 No Content` on success, `404` if the guild has no queue, and `409` if the queue has no current track. |
 
-Track responses are serialized by the libraries used in the handlers. The dashboard should consume the API's actual response shape rather than assuming it is a plain Discord Player `Track` instance.
+Track responses use serialization provided by the libraries in the route handlers. Clients should follow the actual serialized payload shape rather than treating responses as live Discord Player class instances.
 
 ## Socket.IO
 
-The Socket.IO server shares the Express HTTP server. Authenticate a connection by passing the dashboard JWT in the handshake `auth` object:
+Socket.IO shares the Express HTTP server. Pass the dashboard JWT in the connection handshake:
 
 ```js
 const socket = io(serverUrl, {
-  auth: { token: dashboardToken }
+	auth: { token: dashboardToken }
 });
 ```
 
-The server verifies the token and automatically joins the connection to `guild:<guild-id>` based on the verified guild claim. It currently emits:
+After verification, the connection joins `guild:<guild-id>`. Current events are:
 
 | Event | Payload |
 | --- | --- |
 | `playerStart` | The starting track's JSON representation. |
 | `emptyQueue` | No payload; the guild queue has finished. |
+| `playerPause` / `playerResume` | Playback timestamp/progress from Discord Player. |
 
-The dashboard should use the same JWT from its `/web` session URL as the socket token and API bearer token. Avoid placing tokens in logs or exposing them to third parties. In production, serve the dashboard and API over HTTPS/WSS.
+Use the same JWT for API requests and Socket.IO authentication. Avoid logging or exposing it. For separately hosted frontends, configure appropriate origin restrictions at the deployment/proxy layer and use HTTPS/WSS.
 
-## Project layout
+## Project structure
 
 ```text
 src/
-  app.ts                       Discord.js client
-  createPlayer.ts              Discord Player, extractors, and player events
-  app/commands/                CommandKit slash commands
-  app/events/clientReady/      Ready event handler
-  lib/                         Music guards, embeds, filters, and shared types
-  server/server.ts             Express and Socket.IO server setup
-  server/api/                  API router and endpoint handlers
-  web/createSecureToken.ts     Dashboard JWT creation and verification
+	app.ts                         Discord.js client
+	createPlayer.ts                Discord Player setup, extractors, and events
+	app/commands/                  Slash command handlers
+	app/events/clientReady/        Client-ready event handlers
+	lib/                           Shared embeds, filters, guards, types, URL helper
+	server/server.ts               Express and Socket.IO server startup
+	server/socket.ts               Shared Socket.IO instance
+	server/api/                    API router, authentication, and route handlers
+	web/createSecureToken.ts       Dashboard JWT generation and verification
 ```
 
-`commandkit.config.ts` enables the YangonKit plugin, and `tsconfig.json` enables the `@/*` alias for imports under `src/`.
+`commandkit.config.ts` enables YangonKit macros for slash command declarations. TypeScript's `@/*` alias maps to `src/*`.
 
-## Development notes
+## Development
 
-- The Express/Socket.IO server starts when `src/server/server.ts` is loaded. It is imported by the player module, which wires player events to Socket.IO.
-- The backend does not currently serve a frontend or configure Socket.IO CORS. For a separately hosted frontend, configure an explicit trusted origin and use HTTPS/WSS in production.
-- The current Socket.IO events cover track start and an empty queue. Synced lyrics, playback-position updates, pause/resume, seeking, and queue-change socket events are not implemented yet.
-- No automated test script is defined in `package.json`; `yarn build` runs the CommandKit build and TypeScript checks.
+- API route files register handlers as side effects; `src/server/api/index.ts` imports them and exports the shared router.
+- `src/server/socket.ts` owns the shared Socket.IO instance to keep it separate from server startup and API route imports.
+- `src/server/server.ts` enables JSON request parsing, attaches Socket.IO, mounts the API, and starts listening.
+- `src/lib/filters.ts` contains filter presets, but they are not currently exposed through commands or API routes.
+- There is no test script in `package.json`; `yarn build` runs the CommandKit build and type checking.

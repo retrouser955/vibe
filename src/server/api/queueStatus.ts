@@ -3,7 +3,7 @@ import { api } from "./router.ts";
 import { player } from "@/createPlayer.ts";
 import { serialize } from "discord-player";
 
-api.get("/current", authenticateJWT, async (_, res) => {
+api.get("/queue/current", authenticateJWT, async (_, res) => {
     const claims = res.locals.auth;
     const queue = player.getQueue(claims.guild);
 
@@ -11,7 +11,10 @@ api.get("/current", authenticateJWT, async (_, res) => {
         message: "A queue or the current track with that guild was not found."
     });
 
-    res.json(serialize(queue.currentTrack));
+    res.json({
+        track: serialize(queue.currentTrack),
+        timestamp: queue.node.getTimestamp()!
+    });
 });
 
 api.get("/queue", authenticateJWT, async (req, res) => {

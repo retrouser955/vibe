@@ -2,13 +2,15 @@ import { createWebURL } from "@/lib/web.ts";
 import { decodeJWT } from "@/web/createSecureToken.ts";
 import express from "express";
 import { createServer } from "node:http";
-import { Server } from "socket.io";
-import { api } from "./api/router.ts";
+import { io } from "./socket.ts";
+import { api } from "./api/index.ts";
 
 const app = express();
+app.use(express.json());
+
 const server = createServer(app);
 
-const io = new Server(server);
+io.attach(server);
 
 io.use((socket, next) => {
     const token = socket.handshake.auth?.token;

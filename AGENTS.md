@@ -1,112 +1,82 @@
-# AGENTS.md
+# Agent guide
 
-## Discord Music Bot Agents Documentation
+Use this document as a source of verified project conventions when changing this repository. The project is a Discord music bot and dashboard backend using Discord.js, CommandKit, YangonKit, Express, Socket.IO, and `discord-player` v8. The dashboard frontend is not part of this repository.
 
-This document describes the Discord music bot project and provides guidance for agents working with this codebase.
+## Architecture
 
-## Project Overview
+- `src/app.ts` creates the Discord.js client with `Guilds` and `GuildVoiceStates` intents.
+- `src/createPlayer.ts` creates and initializes the shared Discord Player, registers Spotify and YouTube extractors, and connects player events to Discord messages and Socket.IO.
+- `src/server/socket.ts` owns the shared Socket.IO server instance. `src/server/server.ts` attaches it to the HTTP server, configures authentication, mounts the API router, and starts listening.
+- `src/server/api/index.ts` imports route modules for their registration side effects and exports the shared router. Add new route modules there so they are loaded at startup.
+- `src/server/api/authenticateJWT.ts` validates the bearer token and sets the decoded user/guild claims on `res.locals.auth`.
+- `src/web/createSecureToken.ts` signs and verifies dashboard JWTs. Tokens include `user` and `guild` and expire after three hours.
+- `src/lib/` contains shared queue metadata/types, command guards, embeds, filter presets, and URL utilities.
 
-This is a Discord music bot and dashboard API built with Discord.js, CommandKit, and `discord-player` v8.
+Keep module dependencies directed to avoid cycles: player code may import the standalone Socket.IO instance, but should not import `server.ts`, which imports the API routes; API route handlers may import the shared player.
 
-## Key Features for Agents
+## Slash commands
 
-### Discord Bot Commands
+Commands are declared with YangonKit macros, enabled by `yangonKit()` in `commandkit.config.ts`:
 
-The bot provides these slash commands:
+- `$: SlashCommand(description, options?)` declares a slash command; the next function is the handler.
+- `$param(type, options)` declares an option inside the handler. Its name is inferred from the variable name.
 
-- `/play <query>` - Searches for a track and starts playback in the current voice channel
-- `/skip` - Skips the currently playing track
-- `/web` - Creates a private dashboard URL for the current guild with a signed session token
-
-Commands are defined using **YangonKit** compiler macros (enabled via `yangonKit()` in `commandkit.config.ts`).
-
-- `$: SlashCommand(description, options?)` - Declares a chat input (slash) command; the function immediately following the macro becomes the command handler.
-- `$param(type, options)` - Declares a typed command option inside the handler; the option name is inferred from the variable name, and the value is possibly `undefined` when the option is not required. Supports autocomplete for `String` options.
+Example:
 
 ```ts
-$: SlashCommand("Play a song")
-export default function play({ interaction }: ChatInputCommandContext) {
+$: SlashCommand("Play a track")
+export default async function play({ interaction }: ChatInputCommandContext) {
     const query = $param(ApplicationCommandOptionType.String, {
-        description: "The track to play",
+        description: "Track to play",
         required: true
     });
-    interaction.reply(query);
+    // Handle the interaction.
 }
 ```
 
-YangonKit compiles this icon-based syntax into a standard CommandKit command definition (`name`, `description`, `options`).
+Existing commands are `/play`, `/skip`, and `/web`. Music commands use `guardMusicCommand` for voice-channel and queue checks. `/web` issues an ephemeral dashboard URL; treat its JWT as a credential.
 
-### HTTP API Endpoints
+## HTTP API
 
-The API is mounted under `/api` and requires JWT authentication:
+All API routes are mounted below `/api` and protected by `authenticateJWT` using `Authorization: Bearer <dashboard-jwt>`. The claims are available as `res.locals.auth` (`user` and `guild`). Keep the route table below synchronized with the implementation.
 
-```http
-Authorization: Bearer <dashboard-jwt>
-```
+| Method and path | Behavior |
+| --- | --- |
+| `GET /api/me` | Fetches the token user; response adds `userAvatarURL`. |
+| `GET /api/guild` | Fetches the token guild; response adds `guildIconURL`. |
+| `GET /api/search?query=<text>` | Searches for the token user and returns up to five serialized tracks; invalid/missing query is `400`. Search failures return an empty array. |
+| `GET /api/queue/current` | Returns the current serialized track; missing queue/current track is `404`. |
+| `GET /api/queue?offset=0` | Returns `{ size, tracks }` with at most 20 queued tracks; invalid offset is `400`, missing queue/current track is `404`. |
+| `POST /api/queue` | Adds a deserialized track to an existing queue. Invalid payloads and playlists are `400`; missing queue is `404`; success returns `{ position }`. |
+| `POST /api/queue/skip` | Skips the current track; missing queue is `404`, no current track is `409`, success is `204 No Content`. |
 
-Available endpoints:
-- `GET /api/me` - Fetches the Discord user represented by the token
-- `GET /api/guild` - Fetches the token's guild
-- `GET /api/search?query=<text>` - Searches for tracks on behalf of the token's user
-- `GET /api/current` - Returns the current track for the token's guild
-- `GET /api/queue?offset=0` - Returns the queue size and a page of queued tracks
+`src/server/server.ts` installs `express.json()`, so JSON request bodies are parsed. The queue-add route passes its body to Discord Player's `deserialize`; maintain compatibility with the expected serialized payload and validate untrusted input. API serialization formats should not be assumed to be live class instances.
 
-### Socket.IO Events
+## Socket.IO
 
-Socket.IO connections authenticate with the dashboard JWT and are automatically joined to `guild:<guild-id>`.
+Clients authenticate with the dashboard token in `auth.token`; successful connections join `guild:<guild-id>`. Current player events include `playerStart`, `emptyQueue`, `playerPause`, and `playerResume`. Start events carry the track JSON, empty-queue events carry no payload, and pause/resume events carry the player timestamp/progress.
 
-Emitted events:
-- `playerStart` - The starting track's JSON representation
-- `emptyQueue` - No payload; indicates the guild queue has finished
+Use the same token for HTTP and Socket.IO. Do not log or expose dashboard URLs or JWT secrets. The server does not currently define an explicit Socket.IO CORS policy; deployment-facing changes should use a deliberately restricted trusted origin rather than a permissive wildcard.
 
-## Dashboard Integration
+## Configuration and commands
 
-The dashboard JWT is generated by the `/web` endpoint and expires after three hours. The same JWT should be used for:
-- HTTP API bearer token
-- Socket.IO handshake auth
+Environment variables are documented in `.env.example`:
 
-Example Socket.IO connection:
-```js
-const socket = io(serverUrl, {
-  auth: { token: dashboardToken }
-});
-```
+| Variable | Purpose |
+| --- | --- |
+| `TOKEN` | Discord bot token |
+| `USER_ID` | Discord bot user ID used by player initialization |
+| `PORT` | HTTP and Socket.IO listening port |
+| `BASE_URL` | Public origin used to construct dashboard links |
+| `NODE_ENV` | Runtime environment; development mode appends `:<PORT>` to `BASE_URL` |
+| `DASHBOARD_TOKEN` | JWT signing/verifying secret |
 
-## Project Structure
+Never commit `.env` or real credentials. The bot does not require Administrator permission. Audio runtime requirements should follow the installed Discord Player/extractor versions.
 
-- `src/` - Main application source
-  - `app.ts` - Discord.js client
-  - `app/commands/` - CommandKit slash commands
-  - `server/server.ts` - Express and Socket.IO server setup
-  - `server/api/` - API router and endpoint handlers
-  - `web/createSecureToken.ts` - Dashboard JWT creation and verification
+Useful scripts from `package.json`:
 
-## Configuration
+- `yarn dev` — start CommandKit development mode.
+- `yarn build` — type-check and create the production build.
+- `yarn start` — start the production build.
 
-### Environment Variables
-
-| Variable | Required | Description |
-| --- | --- | --- |
-| `TOKEN` | Yes | Discord bot token |
-| `USER_ID` | Yes | Discord bot user ID |
-| `PORT` | Yes | Port for the Express and Socket.IO HTTP server |
-| `BASE_URL` | Yes | Public site/server origin |
-| `NODE_ENV` | Yes | Set to `development` locally or `production` |
-| `DASHBOARD_TOKEN` | Yes | Secret for signing/verifying dashboard JWTs |
-
-### Important Notes
-
-- The bot requires `Guilds` and `GuildVoiceStates` intents
-- Do not grant Administrator permissions unless necessary
-- Dashboard links should be treated like passwords and kept private
-- In production, serve over HTTPS/WSS and configure proper CORS
-
-## Development
-
-Setup:
-1. `yarn install`
-2. Copy `.env.example` to `.env` and fill in values
-3. Generate JWT secret with: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`
-4. `yarn dev` for development, `yarn build && yarn start` for production
-
-Note: The project does not include dashboard frontend assets or automated test scripts.
+There is currently no automated test script. Run `yarn build` after code changes. No dashboard frontend or filter-control API is currently implemented.
