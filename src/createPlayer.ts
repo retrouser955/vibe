@@ -22,17 +22,6 @@ export const player = new DiscordPlayer({
     }
 });
 
-// TODO: Removed this monkey-patch after discord-player releases a new version.
-DiscordPlayer.prototype.deleteQueue = async function (...args) {
-    const queue = this.getQueue(args[0]);
-    const session = queue?.node?.session;
-    try {
-        return await this.queues.delete(args[0]);
-    } finally {
-        session?.dispose();
-    }
-}
-
 player.initialize(process.env['USER_ID']!).then(() => {
     Logger.info("Player has loaded");
 });
@@ -66,7 +55,7 @@ player.events.on("emptyQueue", async (queue) => {
         embeds: [
             {
                 title: "Queue has finished!",
-                description: `The queue in ${guild ? `**${guild.name}**` : "the current guild"} has finished!. Disconnecting...`,
+                description: `The queue in ${guild ? `**${guild.name}**` : "the current guild"} has finished! Disconnecting...`,
                 color: Colors.Blue
             }
         ]
@@ -75,6 +64,10 @@ player.events.on("emptyQueue", async (queue) => {
     await player.deleteQueue(queue.guildId);
 
     io.to(`guild:${queue.guildId}`).emit("emptyQueue");
+});
+
+player.events.on("audioFiltersUpdate", (queue, _, newFilters) => {
+    io.to(`guild:${queue.guildId}`).emit("audioFiltersUpdate", newFilters);
 });
 
 

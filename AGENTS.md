@@ -16,7 +16,9 @@ Keep module dependencies directed to avoid cycles: player code may import the st
 
 ## Dashboard frontend
 
-- No Dashboard currently exists
+- The dashboard is a plain static app in `public/` (`index.html`, `index.css`, `client.js`), served by Express at `/` and `/dashboard`. It is not a separate package and has no build step.
+- `client.js` keeps the dashboard JWT in memory, strips `?session=` from the address bar, and uses the same token for HTTP and Socket.IO. Never log or persist it.
+- Player controls call the `/api/queue/*` routes and stay in sync through Socket.IO events. The audio-filter panel reads `GET /api/queue/filters` and toggles presets through `POST /api/queue/filters`.
 
 ## Slash commands
 
@@ -54,13 +56,15 @@ All API routes are mounted below `/api` and protected by `authenticateJWT` using
 | `POST /api/queue` | Adds a deserialized track to an existing queue. Invalid payloads and playlists are `400`; missing queue is `404`; success returns `{ position }`. |
 | `POST /api/queue/skip` | Skips the current track; missing queue is `404`, no current track is `409`, success is `204 No Content`. |
 | `POST /api/queue/toggle-pause` | Toggles playback pause/resume on the current track. Returns `{ playbackState }` (`"paused"` or `"resumed"`), `404` if the guild has no queue, and `409` if there is no current track. |
+| `GET /api/queue/filters` | Returns `{ available, enabled }` filter names. `enabled` is empty when the guild has no queue; this route does not `404`. |
+| `POST /api/queue/filters` | Toggles the filter named in a JSON `{ "filter": "<name>" }` body, or clears every filter when `filter` is `"Off"`. Unknown names are `400`, a missing queue is `404`, and no current track is `409`; success returns `{ filtersEnabled }`. |
 | `POST /api/queue/stop` | Stops the queue; missing queue is `404`, success is `204 No Content`. |
 
 `src/server/server.ts` installs `express.json()`, so JSON request bodies are parsed. The queue-add route passes its body to Discord Player's `deserialize`; maintain compatibility with the expected serialized payload and validate untrusted input. API serialization formats should not be assumed to be live class instances.
 
 ## Socket.IO
 
-Clients authenticate with the dashboard token in `auth.token`; successful connections join `guild:<guild-id>`. Current player events include `playerStart`, `audioTrackAdd`, `audioTracksAdd`, `audioTrackRemove`, `audioTracksRemove`, `emptyQueue`, `playerPause`, and `playerResume`. Start events carry the track serialized payload, empty-queue events carry no payload, and pause/resume events carry the player timestamp/progress.
+Clients authenticate with the dashboard token in `auth.token`; successful connections join `guild:<guild-id>`. Current player events include `playerStart`, `audioTrackAdd`, `audioTracksAdd`, `audioTrackRemove`, `audioTracksRemove`, `emptyQueue`, `playerPause`, `playerResume`, and `audioFiltersUpdate`. Start events carry the track serialized payload, empty-queue events carry no payload, pause/resume events carry the player timestamp/progress, and `audioFiltersUpdate` carries `{ filtersEnabled }` after any filter change (from the dashboard or `/filter`). The dashboard also accepts a bare array of names or `{ enabled }` for forward compatibility.
 
 Serialized track payloads have this shape:
 
@@ -117,4 +121,4 @@ Useful scripts from `package.json`:
 
 The Vite proxy's `BACKEND_URL` is a dashboard development setting, not a required backend environment variable. Build the backend and dashboard separately. The Express static middleware and SPA fallback for production hosting have not yet been added.
 
-There is currently no automated test script. Run the root `yarn build` after backend changes and `yarn build` from `dashboard/` after frontend changes. The filter presets are not currently exposed through a filter-control API.
+There is currently no automated test script. Run the root `yarn build` after backend changes. Dashboard changes in `public/` have no build step, but keep `client.js` valid and test the page in a browser. Filter presets are defined in `src/lib/filters.ts`, exposed to Discord through `/filter`, and exposed to the dashboard through `GET`/`POST /api/queue/filters`.

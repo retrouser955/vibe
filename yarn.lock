@@ -319,6 +319,16 @@
   resolved "https://registry.yarnpkg.com/@csstools/css-tokenizer/-/css-tokenizer-4.0.2.tgz#7c11bbc7e2912a7def676d72ba6e00895aadc0d5"
   integrity sha512-OoKoR0f76dCY666JlcbhmVTs2drYj1GUXZTYTcbUgJjh9Nv41aFfZ21bPQTERm5+L5cBDo466NltB2lplS5GBw==
 
+"@discord-player/plugin-host@8.0.0-dev.1":
+  version "8.0.0-dev.1"
+  resolved "https://registry.yarnpkg.com/@discord-player/plugin-host/-/plugin-host-8.0.0-dev.1.tgz#36f66c7812d45593100cb5f55bca60dd657f72b1"
+  integrity sha512-w01gK56gnphyE87SbYWtIJZ8miWgO/BpVa/xeBIKjIJNn5j9sTY2YGYqiSkezX4LmfPwKTBhRrlHpuMe4uxntw==
+  dependencies:
+    "@discordjs/collection" "^2.1.1"
+    "@remedia/client" "0.1.0-dev.5"
+    "@remedia/plugin-host" "0.1.0-dev.5"
+    zod "^4.6.7"
+
 "@discordjs/builders@^1.15.0":
   version "1.15.0"
   resolved "https://registry.yarnpkg.com/@discordjs/builders/-/builders-1.15.0.tgz#77f4e89cf3062d032bb806f9c830650f316800e5"
@@ -519,10 +529,10 @@
   dependencies:
     quansync "^1.0.0"
 
-"@remedia/client@0.1.0-dev.2":
-  version "0.1.0-dev.2"
-  resolved "https://registry.yarnpkg.com/@remedia/client/-/client-0.1.0-dev.2.tgz#00023138710dd424c25c32b30eaddc0ca038d4be"
-  integrity sha512-YFcfx4ZoL2gSaqmjCmqS5Y4O/vhAfUP0yXXRH2zwAJPBIbL2/22MqwJuzsGqedVZq1cMWWQGWqBtR1UPqMh4Bg==
+"@remedia/client@0.1.0-dev.5":
+  version "0.1.0-dev.5"
+  resolved "https://registry.yarnpkg.com/@remedia/client/-/client-0.1.0-dev.5.tgz#15c0339e5ca125eef06c0a46da500930e2d7fb5f"
+  integrity sha512-pYFX05/oW0XJoKMCt0sa4Jd4KtowRJn/CvI1JClUyovFq4ni9/pbxZ18YfEWCEfQdFKiAuaf7Ut6xSkXt1gaZA==
   dependencies:
     ws "^8.22.1"
 
@@ -609,6 +619,11 @@
     "@remedia/node-win32-arm64-msvc" "0.1.0-dev.4"
     "@remedia/node-win32-ia32-msvc" "0.1.0-dev.4"
     "@remedia/node-win32-x64-msvc" "0.1.0-dev.4"
+
+"@remedia/plugin-host@0.1.0-dev.5":
+  version "0.1.0-dev.5"
+  resolved "https://registry.yarnpkg.com/@remedia/plugin-host/-/plugin-host-0.1.0-dev.5.tgz#60f416457ba6541d3d8457331c7aacdaf3bd8361"
+  integrity sha512-Xjw00om3r/fs8gxC4v7Rmm1wXFjLv9BD5qPEMfXG2nF1RfnhGnH7qbFNX9ezI+B6TeC7M65Y6drUfrsUqqbV+g==
 
 "@rolldown/binding-android-arm-eabi@1.2.16":
   version "1.2.16"
@@ -1323,13 +1338,14 @@ discord-player-youtubei@^3.1.0:
   dependencies:
     youtubei.js "^18.0.0"
 
-discord-player@^8.0.0-dev.0:
-  version "8.0.0-dev.0"
-  resolved "https://registry.yarnpkg.com/discord-player/-/discord-player-8.0.0-dev.0.tgz#97fbfe1a10884e3041e906aef6c758a5082506c1"
-  integrity sha512-txmj5khp89rk0FXnxrFinHGPcl3w94yW7jE8ShjZpv8XgM1Nma/S2cBoGZx+9Xl8AftImd3o8MSHWQ0Nn/7jng==
+discord-player@^8.0.0-dev.1:
+  version "8.0.0-dev.1"
+  resolved "https://registry.yarnpkg.com/discord-player/-/discord-player-8.0.0-dev.1.tgz#ce1812367a613a6f4c1909aa68a2278592e37d11"
+  integrity sha512-bPKEb3sfkt/zRs+RKzB/TPxIIC8HbZCUnczgEvD0Y1Lqr9M7ViOE4ZSRO4Tr+LYOPvKO/skKF8K4XopB2m43Vg==
   dependencies:
+    "@discord-player/plugin-host" "8.0.0-dev.1"
     "@discordjs/collection" "^2.1.1"
-    "@remedia/client" "0.1.0-dev.2"
+    "@remedia/client" "0.1.0-dev.5"
     zod "^4.6.7"
 
 discord.js@^14.28.1:

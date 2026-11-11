@@ -20,12 +20,16 @@ const ui = {
     progress: $("progress"),
     fill: $("progress-fill"), elapsed: $("elapsed"), total: $("total"), queueToggle: $("queue-toggle"),
     queueCount: $("queue-count"), queuePanel: $("queue-panel"), queueList: $("queue-list"),
-    queueMore: $("queue-more"), queueClose: $("queue-close"), toast: $("toast")
+    queueMore: $("queue-more"), queueClose: $("queue-close"),
+    filtersToggle: $("filters-toggle"), filtersDot: $("filters-dot"), filtersPanel: $("filters-panel"),
+    filtersList: $("filters-list"), filtersHint: $("filters-hint"), filtersClear: $("filters-clear"),
+    filtersClose: $("filters-close"), toast: $("toast")
 };
 
 const state = {
     current: null, totalMs: 0, elapsedBase: 0, anchor: 0, paused: false, timer: null,
     searchSeq: 0, searchTimer: null, queueSeq: 0, queueRefresh: null, toastTimer: null,
+    filters: new Set(), filtersAvailable: [], filtersLoaded: false, filtersBusy: false,
     expired: false, socket: null
 };
 
@@ -225,7 +229,106 @@ function setQueueOpen(open) {
     ui.queuePanel.classList.toggle("open", open);
     ui.queuePanel.setAttribute("aria-hidden", String(!open));
     ui.queueToggle.setAttribute("aria-expanded", String(open));
-    if (open) refreshQueue();
+    if (open) {
+        setFiltersOpen(false);
+        refreshQueue();
+    }
+}
+
+/* ----------------------------------------------------------------- filters */
+
+const FILTERS_OFF = "Off";
+
+// Accepts `{ filtersEnabled }`, `{ enabled }`, or a bare array of names.
+function filterNames(payload) {
+    if (Array.isArray(payload)) return payload;
+    if (!payload || typeof payload !== "object") return null;
+    if (Array.isArray(payload.filtersEnabled)) return payload.filtersEnabled;
+    if (Array.isArray(payload.enabled)) return payload.enabled;
+    return null;
+}
+
+function renderFilters() {
+    ui.filtersList.replaceChildren();
+    const names = state.filtersAvailable;
+    const locked = state.current === null || state.filtersBusy;
+
+    if (names.length === 0) {
+        ui.filtersList.append(node("div", "filters-empty",
+            state.filtersLoaded ? "No filters available" : "Loading filters…"));
+    } else {
+        for (const name of names) {
+            const chip = node("button", "filter-chip", name);
+            chip.type = "button";
+            chip.setAttribute("aria-pressed", String(state.filters.has(name)));
+            chip.disabled = locked;
+            chip.addEventListener("click", () => void toggleFilter(name));
+            ui.filtersList.append(chip);
+        }
+    }
+
+    const count = state.filters.size;
+    ui.filtersDot.hidden = count === 0;
+    ui.filtersClear.hidden = count === 0;
+    ui.filtersClear.disabled = locked;
+    ui.filtersHint.hidden = state.current !== null;
+}
+
+function applyFilters(list) {
+    state.filters = new Set(Array.isArray(list) ? list : []);
+    renderFilters();
+}
+
+function setFiltersOpen(open) {
+    ui.filtersPanel.hidden = !open;
+    ui.filtersToggle.setAttribute("aria-expanded", String(open));
+    if (open) {
+        setQueueOpen(false);
+        void loadFilters();
+    }
+}
+
+async function loadFilters() {
+    try {
+        const data = await api("/api/queue/filters");
+        state.filtersAvailable = Array.isArray(data.available) ? data.available : [];
+        applyFilters(data.enabled);
+    } catch (error) {
+        if (error.status !== 401) toast("Could not load the audio filters.");
+    } finally {
+        state.filtersLoaded = true;
+        renderFilters();
+    }
+}
+
+async function sendFilters(filter, successMessage) {
+    if (state.filtersBusy) return;
+    state.filtersBusy = true;
+    renderFilters();
+    try {
+        const result = await api("/api/queue/filters", {
+            method: "POST",
+            body: JSON.stringify({ filter })
+        });
+        applyFilters(result && result.filtersEnabled);
+        toast(successMessage);
+    } catch (error) {
+        if (error.status === 404) toast("The bot isn't in a voice channel right now.");
+        else if (error.status === 409) toast("There is no track to apply filters to.");
+        else if (error.status !== 401) toast("Could not change the audio filters.");
+    } finally {
+        state.filtersBusy = false;
+        renderFilters();
+    }
+}
+
+function toggleFilter(name) {
+    const enabling = !state.filters.has(name);
+    return sendFilters(name, enabling ? `Enabled the ${name} filter.` : `Disabled the ${name} filter.`);
+}
+
+function clearFilters() {
+    return sendFilters(FILTERS_OFF, "Turned off all audio filters.");
 }
 
 /* ------------------------------------------------------------------ player */
@@ -288,6 +391,7 @@ function setTrack(track, startMs = 0, totalMs = 0) {
     renderTrack(data);
     renderPlayPause();
     setPlaying(true);
+    renderFilters();
     startTicking();
 }
 
@@ -303,6 +407,7 @@ function setIdle() {
     setImage(ui.art, ui.artFallback, null);
     setImage(ui.nowThumb, ui.nowThumbFallback, null);
     setPlaying(false);
+    applyFilters([]);
     updateProgress(0);
 }
 
@@ -338,6 +443,11 @@ function connectSocket() {
     socket.on("emptyQueue", () => { setIdle(); renderQueue([], 0); });
     socket.on("playerPause", (payload) => applyPlayback(payload, true));
     socket.on("playerResume", (payload) => applyPlayback(payload, false));
+    socket.on("audioFiltersUpdate", (payload) => {
+        const names = filterNames(payload);
+        if (names) applyFilters(names);
+        else void loadFilters();
+    });
     for (const event of ["audioTrackAdd", "audioTracksAdd", "audioTrackRemove", "audioTracksRemove"]) {
         socket.on(event, scheduleQueueRefresh);
     }
@@ -355,14 +465,23 @@ ui.search.addEventListener("input", () => {
 
 document.addEventListener("click", (event) => {
     if (!ui.searchBox.contains(event.target)) hideResults();
+    if (!ui.filtersPanel.hidden
+        && !ui.filtersPanel.contains(event.target)
+        && !ui.filtersToggle.contains(event.target)) {
+        setFiltersOpen(false);
+    }
 });
 
 document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") { hideResults(); setQueueOpen(false); }
+    if (event.key === "Escape") { hideResults(); setQueueOpen(false); setFiltersOpen(false); }
 });
 
 ui.queueToggle.addEventListener("click", () => setQueueOpen(!ui.queuePanel.classList.contains("open")));
 ui.queueClose.addEventListener("click", () => setQueueOpen(false));
+
+ui.filtersToggle.addEventListener("click", () => setFiltersOpen(ui.filtersPanel.hidden));
+ui.filtersClose.addEventListener("click", () => setFiltersOpen(false));
+ui.filtersClear.addEventListener("click", () => void clearFilters());
 
 async function runQueueCommand(path, notFound, failed) {
     try {
@@ -413,5 +532,5 @@ if (!token) {
     setIdle();
     renderQueue([], 0);
     connectSocket();
-    void Promise.allSettled([loadMeta(), loadCurrent(), refreshQueue()]);
+    void Promise.allSettled([loadMeta(), loadCurrent(), refreshQueue(), loadFilters()]);
 }

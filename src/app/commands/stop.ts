@@ -13,8 +13,11 @@ export default async function stop({ interaction }: ChatInputCommandContext) {
     void interaction.reply({
         embeds: [
             {
-                description: `**Destoryed the Queue in the current guild**`,
-                color: Colors.Blue
+                description: `**Stopped the Queue in the current guild**`,
+                color: Colors.Blue,
+                footer: {
+                    text: "why u bully me? :("
+                }
             }
         ]
     });

@@ -7,8 +7,10 @@ Vibe is a Discord music bot with an Express API and Socket.IO backend. The backe
 - `/play <query>` searches and plays the first matching track in the caller's voice channel.
 - `/pause` pauses the currently playing track.
 - `/nowplaying` displays the current track and its progress.
+- `/filter` toggles playback audio filters. Requires an existing queue and the user to share the bot's voice channel.
 - `/skip` skips the current track.
 - YouTube and Spotify search/playback extractors are registered with Discord Player.
+- The `/web` dashboard can search, manage the queue, and toggle FFmpeg audio filters.
 - Authenticated API endpoints expose user, guild, search, and queue operations.
 - Socket.IO connections authenticate with a JWT and receive guild-scoped player events.
 
@@ -77,9 +79,9 @@ Pauses the currently playing track. Requires an existing queue and the user to s
 
 Shows the currently playing track with its progress bar. Requires an existing queue and the user to share the bot's voice channel. If no track is playing, the command replies ephemerally.
 
-### `/skip`
+### `/filter`
 
-Requires an existing queue and the user to share the bot's voice channel. It skips the current track; if no track is playing, the command replies ephemerally.
+Toggles playback audio filters on the currently playing track. Requires an existing queue and the user to share the bot's voice channel. If no track is playing, the command replies ephemerally.
 
 ### `/web`
 
@@ -92,6 +94,12 @@ Lists the current queue. Shows the next 10 upcoming tracks with links, and notes
 ### `/stop`
 
 Stops and destroys the current queue for the guild. Requires an existing queue and the user to share the bot's voice channel.
+
+## Dashboard
+
+The bot serves a static dashboard from `public/` at `/` and `/dashboard`. Open it through the `/web` link, which supplies the session token. The dashboard can search for tracks, add them to the queue, control playback, and toggle the FFmpeg audio filters defined in `src/lib/filters.ts`.
+
+The audio-filter panel reads the current state from `GET /api/queue/filters` and toggles presets with `POST /api/queue/filters`. Enabled filters are shared per guild queue, so changes made with `/filter` or from another dashboard tab appear through the `audioFiltersUpdate` Socket.IO event.
 
 ## HTTP API
 
@@ -114,6 +122,8 @@ Missing, invalid, or expired tokens receive `401 Unauthorized`. The JWT is gener
 | `POST /api/queue/skip` | Skips the current track. Returns `204 No Content` on success, `404` if the guild has no queue, and `409` if the queue has no current track. |
 | `POST /api/queue/toggle-pause` | Toggles playback pause/resume on the current track. Returns `{ playbackState }` (`"paused"` or `"resumed"`), `404` if the guild has no queue, and `409` if there is no current track. |
 | `POST /api/queue/stop` | Stops and destroys the guild queue. Returns `204 No Content` on success, `404` if the guild has no queue. |
+| `GET /api/queue/filters` | Returns `{ available, enabled }` filter names. `available` is always populated; `enabled` is empty when the guild has no queue, so this endpoint does not return `404`. |
+| `POST /api/queue/filters` | Toggles one filter from a JSON body such as `{ "filter": "8D" }`, or clears all filters with `{ "filter": "Off" }`. Returns `{ filtersEnabled }` (array of enabled filter names). Unknown names return `400`, `404` if the guild has no queue, and `409` if there is no current track. |
 
 Track responses use serialization provided by the libraries in the route handlers. Clients should follow the actual serialized payload shape rather than treating responses as live Discord Player class instances.
 
@@ -138,6 +148,7 @@ After verification, the connection joins `guild:<guild-id>`. Current events are:
 | `audioTracksRemove` | An array of serialized Tracks removed from the upcoming queue. |
 | `emptyQueue` | No payload; the guild queue has finished. |
 | `playerPause` / `playerResume` | Playback timestamp/progress from Discord Player. |
+| `audioFiltersUpdate` | `{ filtersEnabled }` after any filter change, from the dashboard or `/filter`. |
 
 Serialized track payloads have this shape:
 
@@ -183,12 +194,14 @@ src/
 	server/socket.ts               Shared Socket.IO instance
 	server/api/                    API router, authentication, and route handlers
 	web/createSecureToken.ts       JWT generation and verification
+public/                            Static dashboard (HTML, CSS, client JS)
 ```
 
 `commandkit.config.ts` enables YangonKit macros for slash command declarations. TypeScript's `@/*` alias maps to `src/*`.
 
 ## Development notes
 
-src/server/server.ts enables JSON request parsing, attaches Socket.IO, mounts the API, and starts listening.
-- `src/lib/filters.ts` contains filter presets, but they are not currently exposed through commands or API routes.
+src/server/server.ts enables JSON request parsing, attaches Socket.IO, mounts the API, serves `public/`, and starts listening.
+- `src/lib/filters.ts` defines the FFmpeg filter presets and the shared helpers used by `/filter` and the `/api/queue/filters` routes.
+- The dashboard has no build step; edit the files in `public/` directly. `express.json()` only accepts objects and arrays, so filter requests use a `{ "filter": "<name>" }` body rather than a bare string.
 - There is no test script in the root `package.json`; the root `yarn build` runs the CommandKit build and type checking.

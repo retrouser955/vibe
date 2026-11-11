@@ -1,4 +1,7 @@
-// TODO: AudioFilter.define() these filters when discord-player updates
+import { AudioFilter } from "discord-player";
+import type { GuildQueue } from "discord-player";
+import { io } from "@/server/socket.ts";
+
 export const FFMPEG_AUDIO_FILTERS = {
     "Surround": [
         "apulsator=hz=0.09"
@@ -44,3 +47,30 @@ export const FFMPEG_AUDIO_FILTERS = {
         "aecho=0.8:0.7:40:0.5"
     ]
 } as const;
+
+for (const [name, graph] of Object.entries(FFMPEG_AUDIO_FILTERS)) {
+    AudioFilter.define(name, graph.join(","));
+}
+
+/** Names of every filter preset this bot registers. */
+export const FFMPEG_AUDIO_FILTER_NAMES = Object.keys(FFMPEG_AUDIO_FILTERS);
+
+/** Sentinel used by the filter endpoints to disable every filter. */
+export const FILTERS_OFF = "Off";
+
+/** Whether a value names one of the registered filter presets. */
+export function isFFmpegAudioFilter(value: unknown): value is string {
+    return typeof value === "string" && FFMPEG_AUDIO_FILTER_NAMES.includes(value);
+}
+
+/** Enabled preset names for a queue, in application order. */
+export function getEnabledAudioFilters(queue: GuildQueue): string[] {
+    return [...queue.node.filters.enabled];
+}
+
+/** Broadcast a queue's filter state to the dashboard clients in its guild. */
+export function emitAudioFilters(queue: GuildQueue) {
+    io.to(`guild:${queue.guildId}`).emit("audioFiltersUpdate", {
+        filtersEnabled: getEnabledAudioFilters(queue)
+    });
+}
