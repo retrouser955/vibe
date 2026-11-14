@@ -19,6 +19,8 @@ Keep module dependencies directed to avoid cycles: player code may import the st
 - The dashboard is a plain static app in `public/` (`index.html`, `index.css`, `client.js`), served by Express at `/` and `/dashboard`. It is not a separate package and has no build step.
 - `client.js` keeps the dashboard JWT in memory, strips `?session=` from the address bar, and uses the same token for HTTP and Socket.IO. Never log or persist it.
 - Player controls call the `/api/queue/*` routes and stay in sync through Socket.IO events. The audio-filter panel reads `GET /api/queue/filters` and toggles presets through `POST /api/queue/filters`.
+- The lyrics panel sits inline beside the album art: when the current track has lyrics, the album art shifts left and large lyric text fills the right column; the art recenters when the track has none. There is no lyrics toggle. It reads `GET /api/queue/lyrics`, renders synced lines with the active line highlighted, and falls back to plain text. It advances the highlight from playback progress and `lyricsUpdate` events.
+- The favicon follows the playing track's thumbnail and falls back to the guild icon, then the bundled music-note icon, when nothing is playing or the image fails to load.
 
 ## Slash commands
 
@@ -58,13 +60,14 @@ All API routes are mounted below `/api` and protected by `authenticateJWT` using
 | `POST /api/queue/toggle-pause` | Toggles playback pause/resume on the current track. Returns `{ playbackState }` (`"paused"` or `"resumed"`), `404` if the guild has no queue, and `409` if there is no current track. |
 | `GET /api/queue/filters` | Returns `{ available, enabled }` filter names. `enabled` is empty when the guild has no queue; this route does not `404`. |
 | `POST /api/queue/filters` | Toggles the filter named in a JSON `{ "filter": "<name>" }` body, or clears every filter when `filter` is `"Off"`. Unknown names are `400`, a missing queue is `404`, and no current track is `409`; success returns `{ filtersEnabled }`. |
+| `GET /api/queue/lyrics` | Returns `{ plain, synced, provider }` for the current track. `plain` is `{ available, text }`, `synced` is `{ available, lines: [{ timestampMs, line }] }`, and `provider` is a provider reference or label. Missing queue/lyrics is `404`; no current track is `409`. |
 | `POST /api/queue/stop` | Stops the queue; missing queue is `404`, success is `204 No Content`. |
 
 `src/server/server.ts` installs `express.json()`, so JSON request bodies are parsed. The queue-add route passes its body to Discord Player's `deserialize`; maintain compatibility with the expected serialized payload and validate untrusted input. API serialization formats should not be assumed to be live class instances.
 
 ## Socket.IO
 
-Clients authenticate with the dashboard token in `auth.token`; successful connections join `guild:<guild-id>`. Current player events include `playerStart`, `audioTrackAdd`, `audioTracksAdd`, `audioTrackRemove`, `audioTracksRemove`, `emptyQueue`, `playerPause`, `playerResume`, and `audioFiltersUpdate`. Start events carry the track serialized payload, empty-queue events carry no payload, pause/resume events carry the player timestamp/progress, and `audioFiltersUpdate` carries `{ filtersEnabled }` after any filter change (from the dashboard or `/filter`). The dashboard also accepts a bare array of names or `{ enabled }` for forward compatibility.
+Clients authenticate with the dashboard token in `auth.token`; successful connections join `guild:<guild-id>`. Current player events include `playerStart`, `audioTrackAdd`, `audioTracksAdd`, `audioTrackRemove`, `audioTracksRemove`, `emptyQueue`, `playerPause`, `playerResume`, `audioFiltersUpdate`, and `lyricsUpdate`. Start events carry the track serialized payload, empty-queue events carry no payload, pause/resume events carry the player timestamp/progress, `audioFiltersUpdate` carries `{ filtersEnabled }` after any filter change (from the dashboard or `/filter`), and `lyricsUpdate` carries `{ line, timestamp }` for the active synced lyric line. The dashboard also accepts a bare array of names or `{ enabled }` for filter payloads.
 
 Serialized track payloads have this shape:
 

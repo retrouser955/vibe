@@ -1,5 +1,5 @@
 import { createAudioFilterEmbed } from "@/lib/embeds.ts";
-import { emitAudioFilters, FFMPEG_AUDIO_FILTERS, FILTERS_OFF } from "@/lib/filters.ts";
+import { FFMPEG_AUDIO_FILTERS, FILTERS_OFF } from "@/lib/filters.ts";
 import { guardMusicCommand } from "@/lib/guardMusic.ts";
 import { ChatInputCommandContext } from "commandkit";
 import { AudioFilterName } from "discord-player";
@@ -29,14 +29,12 @@ export default async function filter({ interaction }: ChatInputCommandContext) {
     const { queue } = values;
     if(name === FILTERS_OFF) {
         await queue.node.filters.clear();
-        emitAudioFilters(queue);
         return void interaction.followUp({
             embeds: [createAudioFilterEmbed(queue)]
         });
     }
 
     await queue.node.filters.toggle(name as AudioFilterName);
-    emitAudioFilters(queue);
     void interaction.followUp({
         embeds: [createAudioFilterEmbed(queue)]
     });

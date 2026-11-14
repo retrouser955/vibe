@@ -6,6 +6,7 @@
     <meta name="color-scheme" content="dark">
     <meta name="theme-color" content="#0a0a12">
     <title>Vibe</title>
+    <link id="favicon" rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235865f2' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 18V6l10-2v12'/%3E%3Ccircle cx='6' cy='18' r='3'/%3E%3Ccircle cx='16' cy='16' r='3'/%3E%3C/svg%3E">
     <link rel="stylesheet" href="./index.css">
 </head>
 <body>
@@ -42,19 +43,27 @@
 
         <!-- Now playing -->
         <main class="main">
-            <div class="stage">
-                <div class="art-shell">
-                    <div id="art-fallback" class="art art-fallback" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M9 18V6l10-2v12"></path>
-                            <circle cx="6" cy="18" r="3"></circle>
-                            <circle cx="16" cy="16" r="3"></circle>
-                        </svg>
+            <div id="stage" class="stage">
+                <div class="stage-art">
+                    <div class="art-shell">
+                        <div id="art-fallback" class="art art-fallback" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M9 18V6l10-2v12"></path>
+                                <circle cx="6" cy="18" r="3"></circle>
+                                <circle cx="16" cy="16" r="3"></circle>
+                            </svg>
+                        </div>
+                        <img id="art" class="art" alt="" hidden>
                     </div>
-                    <img id="art" class="art" alt="" hidden>
+                    <h1 id="track-title" class="track-title">Nothing playing</h1>
+                    <p id="track-author" class="track-author"></p>
                 </div>
-                <h1 id="track-title" class="track-title">Nothing playing</h1>
-                <p id="track-author" class="track-author"></p>
+
+                <!-- Lyrics, shown beside the album art when a track has them -->
+                <aside id="lyrics-panel" class="lyrics-panel" aria-hidden="true" aria-label="Lyrics">
+                    <div id="lyrics-provider" class="lyrics-provider" hidden></div>
+                    <div id="lyrics-body" class="lyrics-body"></div>
+                </aside>
             </div>
         </main>
 

@@ -10,7 +10,7 @@ Vibe is a Discord music bot with an Express API and Socket.IO backend. The backe
 - `/filter` toggles playback audio filters. Requires an existing queue and the user to share the bot's voice channel.
 - `/skip` skips the current track.
 - YouTube and Spotify search/playback extractors are registered with Discord Player.
-- The `/web` dashboard can search, manage the queue, and toggle FFmpeg audio filters.
+- The `/web` dashboard can search, manage the queue, toggle FFmpeg audio filters, and show synchronized lyrics.
 - Authenticated API endpoints expose user, guild, search, and queue operations.
 - Socket.IO connections authenticate with a JWT and receive guild-scoped player events.
 
@@ -97,9 +97,13 @@ Stops and destroys the current queue for the guild. Requires an existing queue a
 
 ## Dashboard
 
-The bot serves a static dashboard from `public/` at `/` and `/dashboard`. Open it through the `/web` link, which supplies the session token. The dashboard can search for tracks, add them to the queue, control playback, and toggle the FFmpeg audio filters defined in `src/lib/filters.ts`.
+The bot serves a static dashboard from `public/` at `/` and `/dashboard`. Open it through the `/web` link, which supplies the session token. The dashboard can search for tracks, add them to the queue, control playback, toggle the FFmpeg audio filters defined in `src/lib/filters.ts`, and show the current track's lyrics.
 
 The audio-filter panel reads the current state from `GET /api/queue/filters` and toggles presets with `POST /api/queue/filters`. Enabled filters are shared per guild queue, so changes made with `/filter` or from another dashboard tab appear through the `audioFiltersUpdate` Socket.IO event.
+
+The lyrics panel is shown inline in the player stage: when the current track has lyrics, the album art shifts left and large lyric text fills the right column. It reads `GET /api/queue/lyrics`, highlights the active synced line from playback progress and `lyricsUpdate` events, and falls back to a scrollable plain-text view when only plain lyrics exist. There is no toggle: lyrics appear whenever the current track has them and the art recenters when it does not.
+
+The tab icon follows the dashboard: it shows the current track's thumbnail while a track is playing and falls back to the guild icon (or the bundled music-note icon) when nothing is playing.
 
 ## HTTP API
 
@@ -124,6 +128,7 @@ Missing, invalid, or expired tokens receive `401 Unauthorized`. The JWT is gener
 | `POST /api/queue/stop` | Stops and destroys the guild queue. Returns `204 No Content` on success, `404` if the guild has no queue. |
 | `GET /api/queue/filters` | Returns `{ available, enabled }` filter names. `available` is always populated; `enabled` is empty when the guild has no queue, so this endpoint does not return `404`. |
 | `POST /api/queue/filters` | Toggles one filter from a JSON body such as `{ "filter": "8D" }`, or clears all filters with `{ "filter": "Off" }`. Returns `{ filtersEnabled }` (array of enabled filter names). Unknown names return `400`, `404` if the guild has no queue, and `409` if there is no current track. |
+| `GET /api/queue/lyrics` | Returns `{ plain, synced, provider }` for the current track. `plain` is `{ available, text }` and `synced` is `{ available, lines: [{ timestampMs, line }] }`; `provider` is a provider reference or label. Returns `404` when there is no queue or no lyrics, and `409` when the queue has no current track. |
 
 Track responses use serialization provided by the libraries in the route handlers. Clients should follow the actual serialized payload shape rather than treating responses as live Discord Player class instances.
 
@@ -149,6 +154,7 @@ After verification, the connection joins `guild:<guild-id>`. Current events are:
 | `emptyQueue` | No payload; the guild queue has finished. |
 | `playerPause` / `playerResume` | Playback timestamp/progress from Discord Player. |
 | `audioFiltersUpdate` | `{ filtersEnabled }` after any filter change, from the dashboard or `/filter`. |
+| `lyricsUpdate` | `{ line, timestamp }` for the active synchronized lyric line. |
 
 Serialized track payloads have this shape:
 

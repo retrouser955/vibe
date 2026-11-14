@@ -6,7 +6,6 @@ import { QueueMetadata } from "@/lib/types.ts";
 import { createAudioFilterEmbed, createMusicEmbed } from "@/lib/embeds.ts";
 import { Colors, EmbedBuilder } from "discord.js";
 import {
-    emitAudioFilters,
     FILTERS_OFF,
     FFMPEG_AUDIO_FILTER_NAMES,
     getEnabledAudioFilters,
@@ -108,16 +107,6 @@ api.post("/queue/skip", authenticateJWT, async (_, res) => {
     res.sendStatus(204);
 });
 
-api.get("/queue/filters", authenticateJWT, async (_, res) => {
-    const { guild } = res.locals.auth;
-    const queue = player.getQueue<QueueMetadata>(guild);
-
-    res.json({
-        available: FFMPEG_AUDIO_FILTER_NAMES,
-        enabled: queue ? getEnabledAudioFilters(queue) : []
-    });
-});
-
 api.post("/queue/filters", authenticateJWT, async (req, res) => {
     const { user, guild } = res.locals.auth;
     const queue = player.getQueue<QueueMetadata>(guild);
@@ -152,7 +141,6 @@ api.post("/queue/filters", authenticateJWT, async (req, res) => {
     });
 
     const filtersEnabled = getEnabledAudioFilters(queue);
-    emitAudioFilters(queue);
 
     res.json({ filtersEnabled });
 });
@@ -178,4 +166,42 @@ api.post("/queue/stop", authenticateJWT, async (_, res) => {
     });
 
     res.sendStatus(204);
-})
+});
+
+api.get("/queue/filters", authenticateJWT, async (_, res) => {
+    const { guild } = res.locals.auth;
+    const queue = player.getQueue<QueueMetadata>(guild);
+
+    res.json({
+        available: FFMPEG_AUDIO_FILTER_NAMES,
+        enabled: queue ? getEnabledAudioFilters(queue) : []
+    });
+});
+
+api.get("/queue/lyrics", authenticateJWT, async (_, res) => {
+    const { guild } = res.locals.auth;
+    const queue = player.getQueue<QueueMetadata>(guild);
+    
+    if(!queue) return res.status(404).json({
+        message: "No queue exists"
+    });
+
+    const track = queue.currentTrack;
+
+    if(!track) return res.status(409).json({
+        message: "Invalid queue state"
+    });
+
+    const lyricsRes = await player.lyrics.search(track);
+    const lyrics = lyricsRes.at(0);
+
+    if(!lyrics) return res.status(404).json({
+        message: "lyrics not found"
+    });
+
+    res.json({
+        plain: lyrics.plain,
+        synced: lyrics.synced,
+        provider: lyrics.provider || "LRC Lib"
+    })
+});

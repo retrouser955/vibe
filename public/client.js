@@ -23,13 +23,18 @@ const ui = {
     queueMore: $("queue-more"), queueClose: $("queue-close"),
     filtersToggle: $("filters-toggle"), filtersDot: $("filters-dot"), filtersPanel: $("filters-panel"),
     filtersList: $("filters-list"), filtersHint: $("filters-hint"), filtersClear: $("filters-clear"),
-    filtersClose: $("filters-close"), toast: $("toast")
+    filtersClose: $("filters-close"),
+    lyricsPanel: $("lyrics-panel"), lyricsBody: $("lyrics-body"),
+    lyricsProvider: $("lyrics-provider"), stage: $("stage"), favicon: $("favicon"),
+    toast: $("toast")
 };
 
 const state = {
     current: null, totalMs: 0, elapsedBase: 0, anchor: 0, paused: false, timer: null,
     searchSeq: 0, searchTimer: null, queueSeq: 0, queueRefresh: null, toastTimer: null,
     filters: new Set(), filtersAvailable: [], filtersLoaded: false, filtersBusy: false,
+    lyrics: { status: "idle", plain: "", lines: [], provider: "" },
+    lyricsSeq: 0, lyricsActive: -1, guildIconURL: null,
     expired: false, socket: null
 };
 
@@ -92,6 +97,36 @@ function setImage(image, fallback, source) {
     fallback.hidden = Boolean(valid);
 }
 
+/* ----------------------------------------------------------------- favicon */
+
+const DEFAULT_FAVICON = ui.favicon ? ui.favicon.href : "";
+let faviconHref = "";
+let faviconSeq = 0;
+
+function applyFavicon(href) {
+    faviconHref = href;
+    if (ui.favicon) ui.favicon.href = href;
+}
+
+// Prefer the playing track's thumbnail, then the guild icon, then the bundled icon.
+function setFavicon(source) {
+    const candidates = [source, state.guildIconURL, DEFAULT_FAVICON]
+        .filter((href, index, list) => typeof href === "string" && href && list.indexOf(href) === index);
+    if (candidates.length === 0 || candidates[0] === faviconHref) return;
+
+    const sequence = ++faviconSeq;
+    const attempt = (index) => {
+        if (sequence !== faviconSeq || index >= candidates.length) return;
+        const image = new Image();
+        image.onload = () => {
+            if (sequence === faviconSeq) applyFavicon(candidates[index]);
+        };
+        image.onerror = () => attempt(index + 1);
+        image.src = candidates[index];
+    };
+    attempt(0);
+}
+
 function thumb(source, className) {
     const box = node("div", className);
     const image = node("img");
@@ -124,6 +159,8 @@ async function loadMeta() {
         ui.guildName.textContent = guild.name || "Discord server";
         ui.guildIcon.alt = guild.name ? `${guild.name} icon` : "";
         setImage(ui.guildIcon, ui.guildFallback, guild.guildIconURL);
+        state.guildIconURL = typeof guild.guildIconURL === "string" ? guild.guildIconURL : null;
+        if (!state.current) setFavicon(null);
     } catch (error) {
         if (error.status !== 401) toast("Could not load your Discord profile.");
     }
@@ -331,6 +368,145 @@ function clearFilters() {
     return sendFilters(FILTERS_OFF, "Turned off all audio filters.");
 }
 
+/* ------------------------------------------------------------------ lyrics */
+
+function currentElapsed() {
+    if (!state.current) return 0;
+    return state.paused ? state.elapsedBase : state.elapsedBase + (performance.now() - state.anchor);
+}
+
+function providerLabel(provider) {
+    if (typeof provider === "string") return provider;
+    if (provider && typeof provider === "object") {
+        return String(provider.pluginId || provider.hostId || "");
+    }
+    return "";
+}
+
+// Accepts the API's `{ plain, synced, provider }` record plus older/simpler shapes.
+function normalizeLyrics(payload) {
+    const data = payload && typeof payload === "object" ? payload : {};
+
+    const plain = data.plain && typeof data.plain === "object"
+        ? (data.plain.available ? String(data.plain.text ?? "") : "")
+        : typeof data.plain === "string" ? data.plain : "";
+
+    const source = Array.isArray(data.synced)
+        ? data.synced
+        : data.synced && typeof data.synced === "object" && Array.isArray(data.synced.lines)
+            ? data.synced.lines
+            : [];
+
+    const lines = source
+        .map((line) => ({
+            text: String(line?.line ?? line?.text ?? ""),
+            at: Number(line?.timestampMs ?? line?.timestamp ?? 0)
+        }))
+        .filter((line) => line.text && Number.isFinite(line.at))
+        .sort((a, b) => a.at - b.at);
+
+    return { plain, lines, provider: providerLabel(data.provider) };
+}
+
+function isLyricsOpen() {
+    return ui.stage.classList.contains("lyrics-visible");
+}
+
+// Shows the inline lyrics column whenever the current track has lyrics.
+function applyLyricsVisibility() {
+    const hasContent = state.lyrics.status === "ready"
+        || state.lyrics.status === "loading"
+        || state.lyrics.status === "idle";
+    const show = state.current !== null && hasContent;
+    ui.stage.classList.toggle("lyrics-visible", show);
+    ui.lyricsPanel.setAttribute("aria-hidden", String(!show));
+    if (show) highlightLyrics(currentElapsed());
+}
+
+function renderLyrics() {
+    const lyrics = state.lyrics;
+    ui.lyricsProvider.hidden = !lyrics.provider;
+    ui.lyricsProvider.textContent = lyrics.provider ? `Provided by ${lyrics.provider}` : "";
+    ui.lyricsBody.replaceChildren();
+    state.lyricsActive = -1;
+
+    if (lyrics.status !== "ready") {
+        const message = lyrics.status === "loading" ? "Searching for lyrics…"
+            : lyrics.status === "empty" ? "No lyrics found for this track."
+                : lyrics.status === "error" ? "Could not load lyrics."
+                    : "Play a track to see its lyrics.";
+        ui.lyricsBody.append(node("p", "lyrics-message", message));
+        applyLyricsVisibility();
+        return;
+    }
+
+    if (lyrics.lines.length > 0) {
+        const list = node("div", "lyrics-lines");
+        for (const line of lyrics.lines) list.append(node("p", "lyrics-line", line.text));
+        ui.lyricsBody.append(list);
+    } else {
+        const plain = node("pre", "lyrics-plain");
+        plain.textContent = lyrics.plain;
+        ui.lyricsBody.append(plain);
+    }
+
+    applyLyricsVisibility();
+}
+
+function resetLyrics() {
+    state.lyricsSeq += 1;
+    state.lyrics = { status: "idle", plain: "", lines: [], provider: "" };
+    state.lyricsActive = -1;
+    renderLyrics();
+}
+
+async function loadLyrics() {
+    const sequence = ++state.lyricsSeq;
+    state.lyrics = { status: "loading", plain: "", lines: [], provider: "" };
+    state.lyricsActive = -1;
+    renderLyrics();
+
+    try {
+        const data = await api("/api/queue/lyrics");
+        if (sequence !== state.lyricsSeq) return;
+        const parsed = normalizeLyrics(data);
+        state.lyrics = {
+            status: parsed.lines.length > 0 || parsed.plain ? "ready" : "empty",
+            plain: parsed.plain,
+            lines: parsed.lines,
+            provider: parsed.provider
+        };
+        state.lyricsActive = -1;
+        renderLyrics();
+        highlightLyrics(currentElapsed());
+    } catch (error) {
+        if (sequence !== state.lyricsSeq || error.status === 401) return;
+        const empty = error.status === 404 || error.status === 409;
+        state.lyrics = { status: empty ? "empty" : "error", plain: "", lines: [], provider: "" };
+        renderLyrics();
+    }
+}
+
+function setActiveLyric(index) {
+    if (state.lyricsActive === index) return;
+    state.lyricsActive = index;
+    const lines = ui.lyricsBody.querySelectorAll(".lyrics-line");
+    lines.forEach((element, i) => element.classList.toggle("active", i === index));
+    const active = lines[index];
+    if (active && isLyricsOpen()) active.scrollIntoView({ block: "center", behavior: "smooth" });
+}
+
+function highlightLyrics(elapsedMs) {
+    if (state.lyrics.lines.length === 0) return;
+    const position = Math.max(0, Number(elapsedMs) || 0);
+    let index = -1;
+    for (let i = 0; i < state.lyrics.lines.length; i += 1) {
+        if (state.lyrics.lines[i].at <= position) index = i;
+        else break;
+    }
+    setActiveLyric(index);
+}
+
 /* ------------------------------------------------------------------ player */
 
 function setPlaying(playing) {
@@ -362,6 +538,7 @@ function tick() {
     if (!state.current) return;
     const elapsed = state.paused ? state.elapsedBase : state.elapsedBase + (performance.now() - state.anchor);
     updateProgress(elapsed);
+    highlightLyrics(elapsed);
 }
 
 function startTicking() {
@@ -378,6 +555,7 @@ function renderTrack(data) {
     ui.title.classList.remove("is-idle");
     setImage(ui.art, ui.artFallback, data.thumbnail);
     setImage(ui.nowThumb, ui.nowThumbFallback, data.thumbnail);
+    setFavicon(data.thumbnail);
 }
 
 function setTrack(track, startMs = 0, totalMs = 0) {
@@ -392,6 +570,8 @@ function setTrack(track, startMs = 0, totalMs = 0) {
     renderPlayPause();
     setPlaying(true);
     renderFilters();
+    resetLyrics();
+    void loadLyrics();
     startTicking();
 }
 
@@ -406,8 +586,10 @@ function setIdle() {
     ui.nowAuthor.textContent = "Use /play or search above";
     setImage(ui.art, ui.artFallback, null);
     setImage(ui.nowThumb, ui.nowThumbFallback, null);
+    setFavicon(null);
     setPlaying(false);
     applyFilters([]);
+    resetLyrics();
     updateProgress(0);
 }
 
@@ -418,7 +600,7 @@ function applyPlayback(payload, paused) {
     else if (paused && !state.paused) state.elapsedBase += performance.now() - state.anchor;
     state.paused = paused;
     renderPlayPause();
-    if (paused) { stopTicking(); updateProgress(state.elapsedBase); }
+    if (paused) { stopTicking(); updateProgress(state.elapsedBase); highlightLyrics(state.elapsedBase); }
     else { state.anchor = performance.now(); startTicking(); }
 }
 
@@ -447,6 +629,17 @@ function connectSocket() {
         const names = filterNames(payload);
         if (names) applyFilters(names);
         else void loadFilters();
+    });
+    socket.on("lyricsUpdate", (payload) => {
+        if (state.lyrics.lines.length === 0) return;
+        const text = payload && typeof payload.line === "string" ? payload.line : "";
+        if (!text) return;
+        const at = Number(payload.timestamp);
+        let index = Number.isFinite(at)
+            ? state.lyrics.lines.findIndex((line) => line.at === at)
+            : -1;
+        if (index === -1) index = state.lyrics.lines.findIndex((line) => line.text === text);
+        if (index !== -1) setActiveLyric(index);
     });
     for (const event of ["audioTrackAdd", "audioTracksAdd", "audioTrackRemove", "audioTracksRemove"]) {
         socket.on(event, scheduleQueueRefresh);
