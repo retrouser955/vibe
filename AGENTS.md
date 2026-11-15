@@ -1,6 +1,6 @@
 # Agent guide
 
-Use this document as a source of verified project conventions when changing this repository. The project is a Discord music bot and dashboard using Discord.js, CommandKit, YangonKit, Express, Socket.IO, `discord-player` v8, React, TypeScript, and Vite. The dashboard frontend is a separate package under `dashboard/`.
+Use this document as a source of verified project conventions when changing this repository. The project is a Discord music bot and dashboard using Discord.js, CommandKit, YangonKit, Express, Socket.IO, `discord-player` v8. The live dashboard is using JQuery and pure HTML under `public/`.
 
 ## Architecture
 

@@ -2,6 +2,10 @@
 
 Vibe is a Discord music bot with an Express API and Socket.IO backend. The backend uses Discord.js, CommandKit, YangonKit, and `discord-player` v8.
 
+## Invite the bot
+
+You can use [this link](https://discord.com/oauth2/authorize?client_id=899265546284064798&permissions=4785216375082304&integration_type=0&scope=bot+applications.commands) to invite a live hosted version of this bot.
+
 ## Features
 
 - `/play <query>` searches and plays the first matching track in the caller's voice channel.
