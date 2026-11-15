@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@discord-player/plugin-host": "^8.0.0-dev.7",
-    "@remedia/node": "^0.1.0-dev.4",
+    "@remedia/node": "^0.2.2",
     "bgutils-js": "^4.0.3",
     "commandkit": "^1.2.6",
     "discord-player": "^8.0.0-dev.6",

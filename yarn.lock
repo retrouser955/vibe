@@ -553,89 +553,89 @@
   dependencies:
     ws "^8.22.1"
 
-"@remedia/node-android-arm-eabi@0.1.0-dev.4":
-  version "0.1.0-dev.4"
-  resolved "https://registry.yarnpkg.com/@remedia/node-android-arm-eabi/-/node-android-arm-eabi-0.1.0-dev.4.tgz#83c1d6e9019ca358451826e42b798bc78f57823a"
-  integrity sha512-DphaKo+Yf7tvPQS5+eR06NqrvihAO6fHY1GuL0IhFWCQuVcPyVv7UHLbuyA3GrWOW7JdgRF3LztJ/3Y9d2UnTg==
+"@remedia/node-android-arm-eabi@0.2.2":
+  version "0.2.2"
+  resolved "https://registry.yarnpkg.com/@remedia/node-android-arm-eabi/-/node-android-arm-eabi-0.2.2.tgz#28cb609bb88483a5add9be0381674167c5d34d8a"
+  integrity sha512-CaQs8XvHCG+w4/8OhbUA71tuD6NBU6sQ0YkgEniVWcIEfTBLbVJzZlXKxohzgzJwfKH3umBHo26du8q5xm8SGg==
 
-"@remedia/node-android-arm64@0.1.0-dev.4":
-  version "0.1.0-dev.4"
-  resolved "https://registry.yarnpkg.com/@remedia/node-android-arm64/-/node-android-arm64-0.1.0-dev.4.tgz#5a0b7423fe9f0c625560e45fe3fba3bcb0b7b179"
-  integrity sha512-9cKgiy2i2HYA1GcZxBXKcXbmWhdtH4vFWMKl6cqNXrJKnFpqY9+Mlgl4XehjofcZ2W7bdzaFuzVGNmzIYWuOvA==
+"@remedia/node-android-arm64@0.2.2":
+  version "0.2.2"
+  resolved "https://registry.yarnpkg.com/@remedia/node-android-arm64/-/node-android-arm64-0.2.2.tgz#5060944b5e1aac631561ee36e28701c59c3583d2"
+  integrity sha512-DoJYos+w45sRoFVLFRHkWhHYolqc+StWxTriDryyTOQVmVeWaRSUaQxSVlzNIjHPbswp/11Z9+KzhYUCNA/3og==
 
-"@remedia/node-darwin-arm64@0.1.0-dev.4":
-  version "0.1.0-dev.4"
-  resolved "https://registry.yarnpkg.com/@remedia/node-darwin-arm64/-/node-darwin-arm64-0.1.0-dev.4.tgz#80cfdd0794ad65e5f60ed5e713889ecb9a9c51c1"
-  integrity sha512-3B9DZ7x6xSnNg5SpFqETopbxhM+e9MzOE9IcAlzQ+fO5V7nQ2V2/VZLkQcotPwRCvOSa9IRmLPESKMNTjRotmw==
+"@remedia/node-darwin-arm64@0.2.2":
+  version "0.2.2"
+  resolved "https://registry.yarnpkg.com/@remedia/node-darwin-arm64/-/node-darwin-arm64-0.2.2.tgz#531da86aab307870ace14b5730ce5d238151d2b9"
+  integrity sha512-rGU8xSvc75SVTy+4xhwt0Us6Vps81hpS+h5CtLz8SsqxZeos0Lru/6XDXZ9/YhsvGg16r6bc5VeyOXfWPdKEoA==
 
-"@remedia/node-darwin-x64@0.1.0-dev.4":
-  version "0.1.0-dev.4"
-  resolved "https://registry.yarnpkg.com/@remedia/node-darwin-x64/-/node-darwin-x64-0.1.0-dev.4.tgz#f0b4965ee3da63a0b0db30e577e91855bd9dde47"
-  integrity sha512-/A7Isza33IPSiPzdNS7Qf3ZOVH9+bR9jVbJorQVWqwb7INx/IJbMHbHbwgvSQaXSTDuKufevie2UaUnqJoCvtg==
+"@remedia/node-darwin-x64@0.2.2":
+  version "0.2.2"
+  resolved "https://registry.yarnpkg.com/@remedia/node-darwin-x64/-/node-darwin-x64-0.2.2.tgz#932bf557a7046ac05129fae8a0f7f49810b7f177"
+  integrity sha512-4pu+T3zn8yhvMdkEGpLlf5sFQyY/DZorlA9tptOxyYi+Yri5VM4ydCXCeFaUnQjl0NheCJkDB4ObuPcpBCxtcQ==
 
-"@remedia/node-freebsd-x64@0.1.0-dev.4":
-  version "0.1.0-dev.4"
-  resolved "https://registry.yarnpkg.com/@remedia/node-freebsd-x64/-/node-freebsd-x64-0.1.0-dev.4.tgz#572caffafc5dbd4500779efc50da571708fc7a99"
-  integrity sha512-3PPdSy0VZc60yheMeRbk+sPByrlIwmRHikBxEYrWcs9++L5Y9hJ+ofLTlI7VvwoRxMI2liNunhobyXGB2eXAtg==
+"@remedia/node-freebsd-x64@0.2.2":
+  version "0.2.2"
+  resolved "https://registry.yarnpkg.com/@remedia/node-freebsd-x64/-/node-freebsd-x64-0.2.2.tgz#eb1d9dd484a4ada3fb98e98f901b0fa9f257eaa7"
+  integrity sha512-WYEGP7T5gsPOMEAKAWgpf8atcMTHYUb4sGSf3drjlfKnhnndlEAjAxoUj7HmfE9A6LWhjZ0H/cYYKL58GGg9iw==
 
-"@remedia/node-linux-arm-gnueabihf@0.1.0-dev.4":
-  version "0.1.0-dev.4"
-  resolved "https://registry.yarnpkg.com/@remedia/node-linux-arm-gnueabihf/-/node-linux-arm-gnueabihf-0.1.0-dev.4.tgz#c4c6aecf2f75db93b086b6a9d1642532b7826d74"
-  integrity sha512-XsG0resZvjd2nodauvEGjg9v3xIPmba0hwChs7p8Munox1P3FJ/7RzS/Jqe7Lls4Qp3KpK+RVU1sSYJwWtYisA==
+"@remedia/node-linux-arm-gnueabihf@0.2.2":
+  version "0.2.2"
+  resolved "https://registry.yarnpkg.com/@remedia/node-linux-arm-gnueabihf/-/node-linux-arm-gnueabihf-0.2.2.tgz#aa9d5cc71ee6473ce29d9403294ef1f27c1708bc"
+  integrity sha512-BUErbewjKdG0YyvSj3QmWVxRaAOTGNfszhBo2EYAkiNPKAbkfcLNbopJCUbrHCvjymaBHmG+onLdITDUWMBsgg==
 
-"@remedia/node-linux-arm64-gnu@0.1.0-dev.4":
-  version "0.1.0-dev.4"
-  resolved "https://registry.yarnpkg.com/@remedia/node-linux-arm64-gnu/-/node-linux-arm64-gnu-0.1.0-dev.4.tgz#f6debfdacd85835bab3287891ee03dd2f74cf04a"
-  integrity sha512-rpWtO9VP+1+CdvSYb/8mzi3viXDtb8Vec6o/SPtA3bv89e7YCKtiTAn/WHOgqPW7ANBxwcTD/EyE+QB/ij4vKw==
+"@remedia/node-linux-arm64-gnu@0.2.2":
+  version "0.2.2"
+  resolved "https://registry.yarnpkg.com/@remedia/node-linux-arm64-gnu/-/node-linux-arm64-gnu-0.2.2.tgz#60cfcee42700016935b2edbb89240c677946d92e"
+  integrity sha512-5Dg/QkLr63Q1mqlRx7kmV/ZIPNTn8WP029XLD48E6XwqcQp2d9f6z9/ZbDTnpDfia04IvlQefsx35fikb4Ua8Q==
 
-"@remedia/node-linux-arm64-musl@0.1.0-dev.4":
-  version "0.1.0-dev.4"
-  resolved "https://registry.yarnpkg.com/@remedia/node-linux-arm64-musl/-/node-linux-arm64-musl-0.1.0-dev.4.tgz#4453d785f8a13c09008874a7fab00f3ec29cdaea"
-  integrity sha512-s2eajxqDDdKOxllfmrPRqSniMh//TGlVuljRDr6hNYWrKtscWy4+sC29XYqzM3bjUroi3f+3NqKP6kL3zfePGw==
+"@remedia/node-linux-arm64-musl@0.2.2":
+  version "0.2.2"
+  resolved "https://registry.yarnpkg.com/@remedia/node-linux-arm64-musl/-/node-linux-arm64-musl-0.2.2.tgz#4467aa5bdda71ef84abf33dd4b04c73a45aa93aa"
+  integrity sha512-NhThTBePL4zzspxetU3se0pDnbAHygWU2hs6E2hFWx55hY4a3TrFa5nD4SCShapp6JwVGWvrDLKlt6ANFnuP0Q==
 
-"@remedia/node-linux-x64-gnu@0.1.0-dev.4":
-  version "0.1.0-dev.4"
-  resolved "https://registry.yarnpkg.com/@remedia/node-linux-x64-gnu/-/node-linux-x64-gnu-0.1.0-dev.4.tgz#3c96ca2b3037f736ebc5cc2b282f7cdcfb4ab8a3"
-  integrity sha512-g5bo3R7pRr9Kfz2dN0OmY4MK/toX4/g46hJcXJekUfTNCoAsRuFylHHnDw6Vlj+R+h1vxlypn/u8SBcAAPvpfg==
+"@remedia/node-linux-x64-gnu@0.2.2":
+  version "0.2.2"
+  resolved "https://registry.yarnpkg.com/@remedia/node-linux-x64-gnu/-/node-linux-x64-gnu-0.2.2.tgz#21f1fd23951d5155b8e983d359fa06ea88024659"
+  integrity sha512-7y7stUZV92zYTmUtnDF0ZZD95fSkjBNENQ6oHMNCM1aFMyM4UOxWtlcVkyI+UqABd1z2Uk2M37becptxYST4OQ==
 
-"@remedia/node-linux-x64-musl@0.1.0-dev.4":
-  version "0.1.0-dev.4"
-  resolved "https://registry.yarnpkg.com/@remedia/node-linux-x64-musl/-/node-linux-x64-musl-0.1.0-dev.4.tgz#ee4eb8de6c44c63f1c66a3affb22a6cae1fa4fe6"
-  integrity sha512-EUWwV4/vVAWLbRN/mmVsRh1LERHJmLeIGAszm+Yl8rq4rUhkdiPg6CsqiWEXS4qA0DR1YBHGQnb3lktHHyDcnw==
+"@remedia/node-linux-x64-musl@0.2.2":
+  version "0.2.2"
+  resolved "https://registry.yarnpkg.com/@remedia/node-linux-x64-musl/-/node-linux-x64-musl-0.2.2.tgz#b823e15f7eabab63d08428248180d7b37e7d7651"
+  integrity sha512-LkiHjxsb9YUDLkwwvuvWAo6JHUExj97SPAcXpZCc2md9lD4LhxkPF3bsQgXEyr4aygG4q/QP78AWCYq/hRXJNg==
 
-"@remedia/node-win32-arm64-msvc@0.1.0-dev.4":
-  version "0.1.0-dev.4"
-  resolved "https://registry.yarnpkg.com/@remedia/node-win32-arm64-msvc/-/node-win32-arm64-msvc-0.1.0-dev.4.tgz#9d6d696c53fb36b666fc860464b8d6ebd767d16e"
-  integrity sha512-alcOCLqz+R4benQdzShyxAC38q5PDjmEw13ryhFSvzK/dUZ1/94k4WF5C8eDe47mw7Q2PtR2jYnNWwYjyHLERA==
+"@remedia/node-win32-arm64-msvc@0.2.2":
+  version "0.2.2"
+  resolved "https://registry.yarnpkg.com/@remedia/node-win32-arm64-msvc/-/node-win32-arm64-msvc-0.2.2.tgz#c3289b3ab02d40e87e9fa829c215c2b5a6f09f44"
+  integrity sha512-tyHu4JviVSSGXHuv9ULAKoAISY8f+ZXd29GKxsX7yvUfAL1sre/eeynWosC6hcHrrPBMZKE6rQWmBkPprPPW5g==
 
-"@remedia/node-win32-ia32-msvc@0.1.0-dev.4":
-  version "0.1.0-dev.4"
-  resolved "https://registry.yarnpkg.com/@remedia/node-win32-ia32-msvc/-/node-win32-ia32-msvc-0.1.0-dev.4.tgz#65950626b6ffcf813f1ccb0bd8cfdb47e2dbd883"
-  integrity sha512-5i05zOapc4fBC3GwGasjDA/aHhXuMWDi3v53fIp+jsgVCHcdIZFEWQiV8UzoAmUxfxC9zzokDg0Ug1ZQOE56zQ==
+"@remedia/node-win32-ia32-msvc@0.2.2":
+  version "0.2.2"
+  resolved "https://registry.yarnpkg.com/@remedia/node-win32-ia32-msvc/-/node-win32-ia32-msvc-0.2.2.tgz#8866297d3619167d72dd4896582c9cb6f43c87d9"
+  integrity sha512-2irpVI1RXdWL/yPIk4G0D4MSJ445QTqsUEPjaZybtYsbte45xbPq3zApvWT9qrkC6r0Zt63QXgNF2EJRPj2Z8g==
 
-"@remedia/node-win32-x64-msvc@0.1.0-dev.4":
-  version "0.1.0-dev.4"
-  resolved "https://registry.yarnpkg.com/@remedia/node-win32-x64-msvc/-/node-win32-x64-msvc-0.1.0-dev.4.tgz#2b43853135e55b511748e0ca1f6eecb02dcae733"
-  integrity sha512-52qUDRmyh1A+/GsW/FZK/byygZITrQdH/FHpKDCPqC2B9TRZwgwMnRsCYiQboSWdGhD5XQIA4UHZ0UiVyg3o8Q==
+"@remedia/node-win32-x64-msvc@0.2.2":
+  version "0.2.2"
+  resolved "https://registry.yarnpkg.com/@remedia/node-win32-x64-msvc/-/node-win32-x64-msvc-0.2.2.tgz#4e81364ec92793ff55451fe1e4bcdf21e8268d72"
+  integrity sha512-z0DC/iAkmkL6MX8Xuqc32cR5ZNT11mwoEgjNzkofKb2qhDq1qqIMNldYj2Tb9OZKRbJvvtqKnrkasel4OMUUcg==
 
-"@remedia/node@^0.1.0-dev.4":
-  version "0.1.0-dev.4"
-  resolved "https://registry.yarnpkg.com/@remedia/node/-/node-0.1.0-dev.4.tgz#40a66bed53a816a75a6f5b56473d4b4fdd2bdc95"
-  integrity sha512-oGf5JCAEvDW0M7Q2EUdhsSefckRBFIqJwh5oeJdtRGLcvCYe0D2DS2pGvm924LOPFzemcAFmm1w6IQR9fR9QOQ==
+"@remedia/node@^0.2.2":
+  version "0.2.2"
+  resolved "https://registry.yarnpkg.com/@remedia/node/-/node-0.2.2.tgz#bfc439c7db20f1042f3d5b3a40de2dadb2394abe"
+  integrity sha512-TxiaKPAe9w/CAHv34jSSUX0I46QP0xDvMgjuNpvvUt4npy1uGsvcx6KY9jCkLp5Zqj1qa4Rklown398qoMYl7Q==
   optionalDependencies:
-    "@remedia/node-android-arm-eabi" "0.1.0-dev.4"
-    "@remedia/node-android-arm64" "0.1.0-dev.4"
-    "@remedia/node-darwin-arm64" "0.1.0-dev.4"
-    "@remedia/node-darwin-x64" "0.1.0-dev.4"
-    "@remedia/node-freebsd-x64" "0.1.0-dev.4"
-    "@remedia/node-linux-arm-gnueabihf" "0.1.0-dev.4"
-    "@remedia/node-linux-arm64-gnu" "0.1.0-dev.4"
-    "@remedia/node-linux-arm64-musl" "0.1.0-dev.4"
-    "@remedia/node-linux-x64-gnu" "0.1.0-dev.4"
-    "@remedia/node-linux-x64-musl" "0.1.0-dev.4"
-    "@remedia/node-win32-arm64-msvc" "0.1.0-dev.4"
-    "@remedia/node-win32-ia32-msvc" "0.1.0-dev.4"
-    "@remedia/node-win32-x64-msvc" "0.1.0-dev.4"
+    "@remedia/node-android-arm-eabi" "0.2.2"
+    "@remedia/node-android-arm64" "0.2.2"
+    "@remedia/node-darwin-arm64" "0.2.2"
+    "@remedia/node-darwin-x64" "0.2.2"
+    "@remedia/node-freebsd-x64" "0.2.2"
+    "@remedia/node-linux-arm-gnueabihf" "0.2.2"
+    "@remedia/node-linux-arm64-gnu" "0.2.2"
+    "@remedia/node-linux-arm64-musl" "0.2.2"
+    "@remedia/node-linux-x64-gnu" "0.2.2"
+    "@remedia/node-linux-x64-musl" "0.2.2"
+    "@remedia/node-win32-arm64-msvc" "0.2.2"
+    "@remedia/node-win32-ia32-msvc" "0.2.2"
+    "@remedia/node-win32-x64-msvc" "0.2.2"
 
 "@remedia/plugin-host@0.2.1":
   version "0.2.1"
