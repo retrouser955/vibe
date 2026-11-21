@@ -13,10 +13,6 @@ import { createMusicEmbed } from "./lib/embeds.ts";
 import { emitAudioFilters } from "./lib/filters.ts";
 import { BaseExtractor } from "discord-player";
 
-BaseExtractor.prototype.createBridgeQuery = function(track) {
-    return `${track.title} by ${track.author} official audio`;
-}
-
 export const player = new DiscordPlayer({
     nodes: [
         {
@@ -27,7 +23,6 @@ export const player = new DiscordPlayer({
     async send(guildId, payload) {
         client.guilds.cache.get(guildId)?.shard?.send(payload);
     },
-    // @ts-expect-error
     plugins: [lrclibPlugin()]
 });
 
@@ -117,4 +112,9 @@ player.events.on("playerResume", (queue) => updateProgress(queue, "playerResume"
 client.on(Events.Raw, (payload) => player.receive(payload));
 
 player.extractors.register(SpotifyExtractor);
-player.extractors.register(YoutubeExtractor);
+player.extractors.register(YoutubeExtractor, {
+    bridge: {
+        from: "yt-music",
+        createQuery: (track) => `${track.title} by ${track.author}`
+    }
+});

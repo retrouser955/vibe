@@ -319,24 +319,14 @@
   resolved "https://registry.yarnpkg.com/@csstools/css-tokenizer/-/css-tokenizer-4.0.2.tgz#7c11bbc7e2912a7def676d72ba6e00895aadc0d5"
   integrity sha512-OoKoR0f76dCY666JlcbhmVTs2drYj1GUXZTYTcbUgJjh9Nv41aFfZ21bPQTERm5+L5cBDo466NltB2lplS5GBw==
 
-"@discord-player/plugin-host@8.0.0-dev.6":
-  version "8.0.0-dev.6"
-  resolved "https://registry.yarnpkg.com/@discord-player/plugin-host/-/plugin-host-8.0.0-dev.6.tgz#e0131710981143b4479d8ed6ba8ac611ee2a3377"
-  integrity sha512-nCsBxV2im8BW1qAt4wewwNnv6WpfRQLfzjfEU3vbedfMEWUCt48NRB6wfeownHWksuPc3+zQUNe07ZmUcoc6kQ==
+"@discord-player/plugin-host@8.0.0-dev.10", "@discord-player/plugin-host@^8.0.0-dev.10":
+  version "8.0.0-dev.10"
+  resolved "https://registry.yarnpkg.com/@discord-player/plugin-host/-/plugin-host-8.0.0-dev.10.tgz#724c3d9aca716f338a699e0d3ba3ef96ffc89762"
+  integrity sha512-nj5Qwqzq7FE6EOw5R+Z7SCz5stG1mvK3FFa6m3poI9JmQmMzOYipwPHBBBQxbguetYisZi9ue82x7Y5433J/4g==
   dependencies:
     "@discordjs/collection" "^2.1.1"
-    "@remedia/client" "0.2.1"
-    "@remedia/plugin-host" "0.2.1"
-    zod "^4.6.7"
-
-"@discord-player/plugin-host@^8.0.0-dev.7":
-  version "8.0.0-dev.7"
-  resolved "https://registry.yarnpkg.com/@discord-player/plugin-host/-/plugin-host-8.0.0-dev.7.tgz#8afc210fd47024a830ba7713418504f5819037e2"
-  integrity sha512-34YeUV0ATf1pSyd957BT30sRkEVdonONuBGAbUtik57Q/ORqxDgEO7j7+y8FEIhszTNhWjX3tZ4ocEoWX1Qf4A==
-  dependencies:
-    "@discordjs/collection" "^2.1.1"
-    "@remedia/client" "0.2.2"
-    "@remedia/plugin-host" "0.2.2"
+    "@remedia/client" "0.3.0"
+    "@remedia/plugin-host" "0.3.0"
     zod "^4.6.7"
 
 "@discordjs/builders@^1.15.0":
@@ -539,17 +529,10 @@
   dependencies:
     quansync "^1.0.0"
 
-"@remedia/client@0.2.1":
-  version "0.2.1"
-  resolved "https://registry.yarnpkg.com/@remedia/client/-/client-0.2.1.tgz#93dfc22200f03622f6d0e77c3bbd17121d993705"
-  integrity sha512-FctOdl6JXrzEi7KWO7bNkgXxcbUstb8C1b00PQq8ciYwKM1y3lxYEUADknX+Wcmrg/QAXsStmnVA7kSzUB+j5w==
-  dependencies:
-    ws "^8.22.1"
-
-"@remedia/client@0.2.2":
-  version "0.2.2"
-  resolved "https://registry.yarnpkg.com/@remedia/client/-/client-0.2.2.tgz#6cff056148f4570d95017811a7ae681e43cfa347"
-  integrity sha512-UtNcR8EuN639uZ26fkaTa61qwBn+yU3aKnK/JVfXBgKXbcltNySDIDlind5ApnbLS8vDd8GX7d1iqt28G5sevA==
+"@remedia/client@0.3.0":
+  version "0.3.0"
+  resolved "https://registry.yarnpkg.com/@remedia/client/-/client-0.3.0.tgz#68a20ab9884f6434d23309a8ca0cfa23ac4557cc"
+  integrity sha512-js5YO9+K/mkcbl8LBle26FWFk7JMf1EY/hvd2gwJTy13fg8I77X+eycdN8QFaliCccHov/yagCoAjCjeLmD+1Q==
   dependencies:
     ws "^8.22.1"
 
@@ -637,15 +620,10 @@
     "@remedia/node-win32-ia32-msvc" "0.2.2"
     "@remedia/node-win32-x64-msvc" "0.2.2"
 
-"@remedia/plugin-host@0.2.1":
-  version "0.2.1"
-  resolved "https://registry.yarnpkg.com/@remedia/plugin-host/-/plugin-host-0.2.1.tgz#efdb778e7eff84af2373ef0eb92bc31ce3293698"
-  integrity sha512-fEDDtNwkBHBIOm1Jlg9LE1vw9fsI5Z1P1PPFcfwg7tCmDWyeyd8Z0fmgXidIWPq9iubx1yqm+tnVezse7a+h5Q==
-
-"@remedia/plugin-host@0.2.2":
-  version "0.2.2"
-  resolved "https://registry.yarnpkg.com/@remedia/plugin-host/-/plugin-host-0.2.2.tgz#3dd428c36c8ed8ab83e534d2a3be5949a59b7dfc"
-  integrity sha512-ElvMCbxAyiG3JPjKk2POnB+yZV/itxAc94q6tRi3afq1KFmO23Nfjus8+hHVZC/FqP5yQigEtA5FX5j5G2Abmg==
+"@remedia/plugin-host@0.3.0":
+  version "0.3.0"
+  resolved "https://registry.yarnpkg.com/@remedia/plugin-host/-/plugin-host-0.3.0.tgz#61711dce525c8a26cb2428cdd2d72a244dff7a98"
+  integrity sha512-FQLQHaMZpHCmZ84TbbvQSvtOY3gqQtl1gw6RakJCKWsTV4Pc/utnpwMTVxN0Wgw1RD7autPqpW6+vJpGJmAGiA==
 
 "@rolldown/binding-android-arm-eabi@1.2.16":
   version "1.2.16"
@@ -1353,21 +1331,21 @@ discord-player-spotify@^1.1.9:
     node-html-parser "^7.0.1"
     otpauth "^9.3.6"
 
-discord-player-youtubei@^3.1.0:
-  version "3.1.0"
-  resolved "https://registry.yarnpkg.com/discord-player-youtubei/-/discord-player-youtubei-3.1.0.tgz#fe0e3dd0c257b1a5d011078f7ece03e1b398d4fb"
-  integrity sha512-+EoZZh0SCc2m5NDxbRHCv0JpZEGFksEuGZxfztUYChVfdZt0fCbvNgY0xgJ0N6PNKxoXKVNF7PT4i1oWyvWoEg==
+discord-player-youtubei@3.1.1:
+  version "3.1.1"
+  resolved "https://registry.yarnpkg.com/discord-player-youtubei/-/discord-player-youtubei-3.1.1.tgz#242dd83192f36daf07b234112a58e15745f03a0a"
+  integrity sha512-l/qIMc0lUIjpv/OPshgwSSJ5yZVO+8/rMPYGxeiysWFmmkGFsPGWCAKbNGZQJqsBrf+mh83uHYRPqt2CN0DJuQ==
   dependencies:
-    youtubei.js "^18.0.0"
+    youtubei.js "^18.3.0"
 
-discord-player@^8.0.0-dev.6:
-  version "8.0.0-dev.6"
-  resolved "https://registry.yarnpkg.com/discord-player/-/discord-player-8.0.0-dev.6.tgz#cd839cd5928f8e8c7e3cff39271ea53b86aecdbd"
-  integrity sha512-/t1NM97Ta29MUqHDe5LSATRzt0FeZwHmaR4vur5bBb9vqzUfTojaCmFtL5JeJmDV5gPfhFgBhdb7mfTFWXcciQ==
+discord-player@^8.0.0-dev.10:
+  version "8.0.0-dev.10"
+  resolved "https://registry.yarnpkg.com/discord-player/-/discord-player-8.0.0-dev.10.tgz#59d964edf006ecc7c86f07b07716748ea8e2b158"
+  integrity sha512-SjKvPtgIkfZEXR1E/YRowIw2BWb1FbU9/gsC80+bZhZua52ipPda6VO68sBXG7hkqhBiYKoknEXLFzuohDlLSQ==
   dependencies:
-    "@discord-player/plugin-host" "8.0.0-dev.6"
+    "@discord-player/plugin-host" "8.0.0-dev.10"
     "@discordjs/collection" "^2.1.1"
-    "@remedia/client" "0.2.1"
+    "@remedia/client" "0.3.0"
     zod "^4.6.7"
 
 discord.js@^14.28.1:
@@ -2632,10 +2610,10 @@ yallist@^3.0.2:
   resolved "https://registry.yarnpkg.com/yallist/-/yallist-3.1.1.tgz#dbb7daf9bfd8bac9ab45ebf602b8cbad0d5d08fd"
   integrity sha512-a4UGQaWPH59mOXUYnAG2ewncQS4i4F43Tv3JoAM+s2VDAmS9NsK8GpDMLrCHPksFT7h3K6TOoUNn2pb7RoXx4g==
 
-yangonkit@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/yangonkit/-/yangonkit-1.0.0.tgz#4aac703fb59f6148b58416436cecd30745e07760"
-  integrity sha512-RVwM0uzUHahI7yA3F9EAEa/LxTZ7NnR16lbf7uvZXG/VmyRg1gR5v39CR9yUNHyBPQaMRbk0RobaZ2ZH1L8Qkw==
+yangonkit@^1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/yangonkit/-/yangonkit-1.0.2.tgz#9665efc86bef2c1a5c6ab145c830915a8e85c008"
+  integrity sha512-NkoBGKtEWgAIXA7UE4dAsiqL6t/GBfVxE59eJTudPPbwYySpv8/KhJnyNRWPEwbW4+CVUicIioVnBe36y14wgA==
   dependencies:
     ts-morph "^27.0.2"
 
@@ -2644,7 +2622,7 @@ yoctocolors@^2.1.1:
   resolved "https://registry.yarnpkg.com/yoctocolors/-/yoctocolors-2.2.0.tgz#c4b68ee477f3982c33e4de24a5aa4a354be506d3"
   integrity sha512-xYqdZFUK/VYazNl/oCDYN+3WloWQwMfZxBoiNt6qNyk+xfOdi598muWE42rNZFp1kNOiqW936q5RhUdnpqElSg==
 
-youtubei.js@^18.0.0:
+youtubei.js@^18.3.0:
   version "18.3.0"
   resolved "https://registry.yarnpkg.com/youtubei.js/-/youtubei.js-18.3.0.tgz#510e0cdcbc5b261449cb10de7cb582044868c0fc"
   integrity sha512-6Cwn/U8a+OjpZp5XgqOjwy7Lk0RrGavm3I5zO7qZWO+fes20vhWMZnlUs0h/97SwjS0AsxAZrZ5bJ85XBJVWTw==

@@ -1,5 +1,5 @@
 import { ChatInputCommandContext } from "commandkit";
-import { ApplicationCommandOptionType, Colors, EmbedBuilder, MessageFlags, SendableChannels } from "discord.js";
+import { ApplicationCommandOptionType, Colors, EmbedBuilder, SendableChannels } from "discord.js";
 import { player } from "../../createPlayer.ts";
 import { QueueMetadata } from "@/lib/types.ts";
 import { createMusicEmbed } from "@/lib/embeds.ts";
