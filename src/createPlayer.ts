@@ -11,7 +11,6 @@ import { Colors } from "discord.js";
 import { QueueMetadata } from "./lib/types.ts";
 import { createMusicEmbed } from "./lib/embeds.ts";
 import { emitAudioFilters } from "./lib/filters.ts";
-import { BaseExtractor } from "discord-player";
 
 export const player = new DiscordPlayer({
     nodes: [

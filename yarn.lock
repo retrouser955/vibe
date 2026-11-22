@@ -1331,10 +1331,10 @@ discord-player-spotify@^1.1.9:
     node-html-parser "^7.0.1"
     otpauth "^9.3.6"
 
-discord-player-youtubei@3.1.1:
-  version "3.1.1"
-  resolved "https://registry.yarnpkg.com/discord-player-youtubei/-/discord-player-youtubei-3.1.1.tgz#242dd83192f36daf07b234112a58e15745f03a0a"
-  integrity sha512-l/qIMc0lUIjpv/OPshgwSSJ5yZVO+8/rMPYGxeiysWFmmkGFsPGWCAKbNGZQJqsBrf+mh83uHYRPqt2CN0DJuQ==
+discord-player-youtubei@^3.1.3:
+  version "3.1.3"
+  resolved "https://registry.yarnpkg.com/discord-player-youtubei/-/discord-player-youtubei-3.1.3.tgz#bb9f96e085933cfbc6bd74ad69208f299b924aeb"
+  integrity sha512-dGpUkaSqH/1w8r7H1d6/088sQk2R6A2DA2L14rrffLy6b47kfZnZNCW9OdZsgtzs2ZVYjZ07+Jd75GQZ6kiPqA==
   dependencies:
     youtubei.js "^18.3.0"
 
